@@ -1,34 +1,50 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller, Get, Post, Body, Patch, Param, Delete,
+  HttpCode, HttpStatus, ParseUUIDPipe, Query,
+} from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { CategoryResponseDto } from './dto/category-response.dto';
 
 @Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoryService.create(createCategoryDto);
+  create(@Body() dto: CreateCategoryDto): Promise<CategoryResponseDto> {
+    return this.categoryService.create(dto);
   }
 
   @Get()
-  findAll() {
-    return this.categoryService.findAll();
+  findAll(
+    @Query('includeInactive') includeInactive?: string,
+  ): Promise<CategoryResponseDto[]> {
+    return this.categoryService.findAll(includeInactive === 'true');
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.categoryService.findOne(+id);
+  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<CategoryResponseDto> {
+    return this.categoryService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
-    return this.categoryService.update(+id, updateCategoryDto);
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateCategoryDto,
+  ): Promise<CategoryResponseDto> {
+    return this.categoryService.update(id, dto);
   }
 
+  //Tạm ẩn món với status = 0
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.categoryService.remove(+id);
+  softRemove(@Param('id', ParseUUIDPipe) id: string): Promise<CategoryResponseDto> {
+    return this.categoryService.softRemove(id);
+  }
+
+  @Delete(':id/hard')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  hardRemove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    return this.categoryService.hardRemove(id);
   }
 }
