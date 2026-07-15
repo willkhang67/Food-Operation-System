@@ -9,6 +9,9 @@ import { FoodModule } from './food/food.module';
 import { OrderModule } from './order/order.module';
 import { PaymentModule } from './payment/payment.module';
 import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -29,10 +32,17 @@ import { UserModule } from './user/user.module';
       }),
     }),
     UserModule,
+    AuthModule,
     CategoryModule,
     FoodModule,
     OrderModule,
     PaymentModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60_000, // this is 60s yessir
+        limit: 10, // max number of requests
+      }
+    ])
   ],
   controllers: [AppController],
   providers: [AppService],
