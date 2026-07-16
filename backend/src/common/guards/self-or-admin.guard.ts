@@ -9,7 +9,7 @@ import { RequestUser } from '../../auth/interfaces/request-user.interface';
 
 /**
  * Allows the authenticated user to act on their own resource,
- * or any admin. Expects route param `id` to be the target user id.
+ * or any admin. Expects route param id to be the target user id.
  */
 @Injectable()
 export class SelfOrAdminGuard implements CanActivate {

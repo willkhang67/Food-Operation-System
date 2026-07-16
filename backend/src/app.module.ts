@@ -42,7 +42,7 @@ import { APP_GUARD } from '@nestjs/core';
         ttl: 60_000, // this is 60s yessir
         limit: 10, // max number of requests
       }
-    ])
+    ]),
   ],
   controllers: [AppController],
   providers: [AppService],
