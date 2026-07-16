@@ -8,10 +8,17 @@ describe('AuthController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [AuthService],
+      providers: [
+        {
+          provide: AuthService,
+          useValue: {
+            login: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
-    controller = module.get<AuthController>(AuthController);
+    controller = module.get(AuthController);
   });
 
   it('should be defined', () => {

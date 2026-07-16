@@ -45,17 +45,21 @@ export class UserService {
     });
 
     const saved = await this.userRepository.save(user);
-    return this.toResponseDto(saved);
+    return this.toPublicUser(saved);
   }
 
   async findAll(): Promise<UserResponseDto[]> {
     const users = await this.userRepository.find();
-    return users.map((user) => this.toResponseDto(user));
+    return users.map((user) => this.toPublicUser(user));
   }
 
   async findOne(id: string): Promise<UserResponseDto> {
-    const user = await this.findEntityById(id);
-    return this.toResponseDto(user);
+    const user = await this.requireEntityById(id);
+    return this.toPublicUser(user);
+  }
+
+  async findEntityById(id: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { id } });
   }
 
   async findByEmail(email: string): Promise<User | null> {
@@ -68,11 +72,25 @@ export class UserService {
     return this.passwordHasher.verify(password, user.passwordHash);
   }
 
+  toPublicUser(user: User): UserResponseDto {
+    return {
+      id: user.id,
+      email: this.fieldEncryption.decrypt(user.emailEnc),
+      name: this.fieldEncryption.decrypt(user.nameEnc),
+      phone: user.phoneEnc
+        ? this.fieldEncryption.decrypt(user.phoneEnc)
+        : null,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
+
   async update(
     id: string,
     updateUserDto: UpdateUserDto,
   ): Promise<UserResponseDto> {
-    const user = await this.findEntityById(id);
+    const user = await this.requireEntityById(id);
 
     if (updateUserDto.email !== undefined) {
       const normalizedEmail = this.blindIndex.normalizeEmail(
@@ -110,33 +128,19 @@ export class UserService {
     }
 
     const saved = await this.userRepository.save(user);
-    return this.toResponseDto(saved);
+    return this.toPublicUser(saved);
   }
 
   async remove(id: string): Promise<void> {
-    const user = await this.findEntityById(id);
+    const user = await this.requireEntityById(id);
     await this.userRepository.remove(user);
   }
 
-  private async findEntityById(id: string): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id } });
+  private async requireEntityById(id: string): Promise<User> {
+    const user = await this.findEntityById(id);
     if (!user) {
       throw new NotFoundException(`User #${id} not found`);
     }
     return user;
-  }
-
-  private toResponseDto(user: User): UserResponseDto {
-    return {
-      id: user.id,
-      email: this.fieldEncryption.decrypt(user.emailEnc),
-      name: this.fieldEncryption.decrypt(user.nameEnc),
-      phone: user.phoneEnc
-        ? this.fieldEncryption.decrypt(user.phoneEnc)
-        : null,
-      role: user.role,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
   }
 }
