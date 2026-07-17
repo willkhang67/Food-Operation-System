@@ -28,17 +28,11 @@ describe('UserController', () => {
         },
         {
           provide: PasswordHasherService,
-          useValue: {
-            hash: jest.fn(),
-            verify: jest.fn(),
-          },
+          useValue: { hash: jest.fn(), verify: jest.fn() },
         },
         {
           provide: FieldEncryptionService,
-          useValue: {
-            encrypt: jest.fn(),
-            decrypt: jest.fn(),
-          },
+          useValue: { encrypt: jest.fn(), decrypt: jest.fn() },
         },
         {
           provide: BlindIndexService,
@@ -51,7 +45,7 @@ describe('UserController', () => {
       ],
     }).compile();
 
-    controller = module.get<UserController>(UserController);
+    controller = module.get(UserController);
   });
 
   it('should be defined', () => {
