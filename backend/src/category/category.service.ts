@@ -5,6 +5,7 @@ import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryResponseDto } from './dto/category-response.dto';
+import { CategoryOptionDto } from './dto/category-option.dto';
 
 @Injectable()
 export class CategoryService {
@@ -53,6 +54,26 @@ export class CategoryService {
       : await this.categoryRepo.findBy({ status: 1 });
 
     return categories.map((c) => this.toResponseDto(c));
+  }
+
+  async getOptions(): Promise<CategoryOptionDto[]> {
+    const categories = await this.categoryRepo.find({
+      select: {
+        id: true,
+        name: true,
+      },
+      where: {
+        status: 1,
+      },
+      order: {
+        name: 'ASC',
+      },
+    });
+
+    return categories.map((category) => ({
+      id: category.id,
+      name: category.name,
+    }));
   }
 
   async findOne(id: string): Promise<CategoryResponseDto> {

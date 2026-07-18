@@ -6,6 +6,7 @@ import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryResponseDto } from './dto/category-response.dto';
+import { CategoryOptionDto } from './dto/category-option.dto';
 
 @Controller('category')
 export class CategoryController {
@@ -21,6 +22,11 @@ export class CategoryController {
     @Query('includeInactive') includeInactive?: string,
   ): Promise<CategoryResponseDto[]> {
     return this.categoryService.findAll(includeInactive === 'true');
+  }
+
+  @Get('options')
+  getOptions(): Promise<CategoryOptionDto[]> {
+    return this.categoryService.getOptions();
   }
 
   @Get(':id')
