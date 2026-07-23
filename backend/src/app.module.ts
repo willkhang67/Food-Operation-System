@@ -12,7 +12,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 
 import { APP_GUARD } from '@nestjs/core';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
