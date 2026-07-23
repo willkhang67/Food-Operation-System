@@ -20,7 +20,9 @@ import { CreateFoodDto } from './dto/create-food.dto';
 import { UpdateFoodDto } from './dto/update-food.dto';
 import { UpdateFoodPriceDto } from './dto/update-food-price.dto';
 import { FoodResponseDto } from './dto/food-response.dto';
+import { SkipThrottle } from '@nestjs/throttler';
 
+@SkipThrottle()
 @Controller('food')
 export class FoodController {
   constructor(

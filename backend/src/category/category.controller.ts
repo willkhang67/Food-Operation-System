@@ -16,7 +16,9 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryResponseDto } from './dto/category-response.dto';
 import { CategoryOptionDto } from './dto/category-option.dto';
+import { SkipThrottle } from '@nestjs/throttler';
 
+@SkipThrottle() // skip the throttle for this controller
 @Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
