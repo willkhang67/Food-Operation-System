@@ -59,7 +59,8 @@ export class FoodImageService {
     if (!food) throw new NotFoundException(`Food with id ${foodId} not found`);
 
     const target = await this.imageRepo.findOneBy({ id: imageId });
-    if (!target) throw new NotFoundException(`Image with id ${imageId} not found`);
+    if (!target)
+      throw new NotFoundException(`Image with id ${imageId} not found`);
 
     if (food.headImageId === imageId) {
       food.headImageId = target.nextImageId;

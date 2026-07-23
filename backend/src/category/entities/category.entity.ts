@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToMany,
+} from 'typeorm';
 import { Food } from '../../food/entities/food.entity';
 
 @Entity('categories')
@@ -10,13 +17,13 @@ export class Category {
     type: 'varchar',
     length: 100,
     nullable: false,
-    unique: true
+    unique: true,
   })
   name!: string;
 
   @Column({
-  type: 'text',
-  nullable: true,
+    type: 'text',
+    nullable: true,
   })
   description!: string | null;
 

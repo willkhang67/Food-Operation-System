@@ -77,9 +77,7 @@ export class UserService {
       id: user.id,
       email: this.fieldEncryption.decrypt(user.emailEnc),
       name: this.fieldEncryption.decrypt(user.nameEnc),
-      phone: user.phoneEnc
-        ? this.fieldEncryption.decrypt(user.phoneEnc)
-        : null,
+      phone: user.phoneEnc ? this.fieldEncryption.decrypt(user.phoneEnc) : null,
       role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,

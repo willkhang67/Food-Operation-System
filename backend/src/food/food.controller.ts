@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, ParseUUIDPipe, Query,} from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpCode,
+  HttpStatus,
+  ParseUUIDPipe,
+  Query,
+} from '@nestjs/common';
 import { FoodImage } from './entities/food-image.entity';
 
 import { FoodService } from './food.service';
@@ -9,7 +21,9 @@ import { UpdateFoodDto } from './dto/update-food.dto';
 import { UpdateFoodPriceDto } from './dto/update-food-price.dto';
 import { FoodResponseDto } from './dto/food-response.dto';
 import { FoodBasicDto } from './dto/food-basic.dto';
+import { SkipThrottle } from '@nestjs/throttler';
 
+@SkipThrottle()
 @Controller('food')
 export class FoodController {
   constructor(
@@ -36,7 +50,9 @@ export class FoodController {
 
   // Xem toàn bộ lịch sử giá
   @Get(':id/price')
-  getPriceHistory(@Param('id', ParseUUIDPipe) id: string): Promise<FoodBasicDto[]> {
+  getPriceHistory(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<FoodBasicDto[]> {
     return this.foodService.getPriceHistory(id);
   }
 

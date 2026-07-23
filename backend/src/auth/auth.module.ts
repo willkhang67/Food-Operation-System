@@ -7,6 +7,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
+//config authen
 @Module({
   imports: [
     UserModule,
@@ -23,7 +24,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         return {
           secret,
           signOptions: {
-            expiresIn: config.get('JWT_EXPIRES_IN', '1d') as `${number}d`,
+            expiresIn: config.get('JWT_EXPIRES_IN', '1d'),
           },
         };
       },

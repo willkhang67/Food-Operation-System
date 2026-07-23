@@ -16,4 +16,3 @@ import { FoodImage } from './entities/food-image.entity';
   exports: [TypeOrmModule],
 })
 export class FoodModule {}
-

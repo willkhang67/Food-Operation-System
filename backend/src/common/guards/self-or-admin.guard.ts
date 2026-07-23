@@ -26,10 +26,7 @@ export class SelfOrAdminGuard implements CanActivate {
       throw new ForbiddenException('Insufficient permissions');
     }
 
-    if (
-      currentUser.role === UserRole.ADMIN ||
-      currentUser.id === targetId
-    ) {
+    if (currentUser.role === UserRole.ADMIN || currentUser.id === targetId) {
       return true;
     }
 
