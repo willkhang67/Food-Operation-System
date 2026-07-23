@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, ParseUUIDPipe, Query,} from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpCode,
+  HttpStatus,
+  ParseUUIDPipe,
+  Query,
+} from '@nestjs/common';
 import { FoodImage } from './entities/food-image.entity';
 
 import { FoodService } from './food.service';
@@ -35,7 +47,9 @@ export class FoodController {
 
   // Xem toàn bộ lịch sử giá
   @Get(':id/price-history')
-  getPriceHistory(@Param('id', ParseUUIDPipe) id: string): Promise<FoodResponseDto[]> {
+  getPriceHistory(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<FoodResponseDto[]> {
     return this.foodService.getPriceHistory(id);
   }
 

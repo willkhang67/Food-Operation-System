@@ -5,11 +5,7 @@ import { PasswordHasherService } from './password-hasher.service';
 
 @Global()
 @Module({
-  providers: [
-    PasswordHasherService,
-    FieldEncryptionService,
-    BlindIndexService,
-  ],
+  providers: [PasswordHasherService, FieldEncryptionService, BlindIndexService],
   exports: [PasswordHasherService, FieldEncryptionService, BlindIndexService],
 })
 export class CryptoModule {}

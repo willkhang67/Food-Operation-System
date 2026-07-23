@@ -1,4 +1,13 @@
-import {Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, OneToMany, JoinTable,} from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToMany,
+  OneToMany,
+  JoinTable,
+} from 'typeorm';
 import { Category } from '../../category/entities/category.entity';
 import { FoodImage } from './food-image.entity';
 
@@ -36,7 +45,7 @@ export class Food {
   is_available!: boolean;
 
   @Column({ type: 'int', default: 1 })
-  status!: number; 
+  status!: number;
 
   @ManyToMany(() => Category, (category) => category.foods)
   @JoinTable({

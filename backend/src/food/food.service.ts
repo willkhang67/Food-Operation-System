@@ -1,5 +1,7 @@
 import {
-  Injectable, NotFoundException, ConflictException,
+  Injectable,
+  NotFoundException,
+  ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
@@ -61,7 +63,9 @@ export class FoodService {
   async create(dto: CreateFoodDto): Promise<FoodResponseDto> {
     const existing = await this.findActiveByName(dto.name);
     if (existing) {
-      throw new ConflictException(`Food with name "${dto.name}" already exists`);
+      throw new ConflictException(
+        `Food with name "${dto.name}" already exists`,
+      );
     }
 
     const categories = await this.resolveCategories(dto.categoryIds);
@@ -82,9 +86,9 @@ export class FoodService {
   async findAll(includeInactive = false): Promise<FoodResponseDto[]> {
     const foods = await this.foodRepo.find({
       where: includeInactive ? {} : { status: 1 },
-      relations: { 
+      relations: {
         categories: true,
-        images: true
+        images: true,
       },
     });
     return foods.map((f) => this.toResponseDto(f));
@@ -119,7 +123,8 @@ export class FoodService {
       where: { id, status: 1 },
       relations: { categories: true },
     });
-    if (!food) throw new NotFoundException(`Active food with id ${id} not found`);
+    if (!food)
+      throw new NotFoundException(`Active food with id ${id} not found`);
 
     if (dto.description !== undefined) {
       food.description = dto.description;
@@ -130,12 +135,16 @@ export class FoodService {
   }
 
   // caapj nhật giá mới, tạo record mới, record giá cũ có status = 0
-  async updatePrice(id: string, dto: UpdateFoodPriceDto): Promise<FoodResponseDto> {
+  async updatePrice(
+    id: string,
+    dto: UpdateFoodPriceDto,
+  ): Promise<FoodResponseDto> {
     const current = await this.foodRepo.findOne({
       where: { id, status: 1 },
       relations: { categories: true },
     });
-    if (!current) throw new NotFoundException(`Active food with id ${id} not found`);
+    if (!current)
+      throw new NotFoundException(`Active food with id ${id} not found`);
 
     current.status = 0;
     await this.foodRepo.save(current);

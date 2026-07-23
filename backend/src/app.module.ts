@@ -11,7 +11,6 @@ import { PaymentModule } from './payment/payment.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -41,7 +40,7 @@ import { APP_GUARD } from '@nestjs/core';
       {
         ttl: 60_000, // this is 60s yessir
         limit: 10, // max number of requests
-      }
+      },
     ]),
   ],
   controllers: [AppController],

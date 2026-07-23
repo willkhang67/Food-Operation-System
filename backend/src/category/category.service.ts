@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from './entities/category.entity';
@@ -36,7 +40,9 @@ export class CategoryService {
         return this.toResponseDto(reactivated);
       }
 
-      throw new ConflictException(`Category with name "${dto.name}" already exists`);
+      throw new ConflictException(
+        `Category with name "${dto.name}" already exists`,
+      );
     }
 
     const category = this.categoryRepo.create({
@@ -84,7 +90,10 @@ export class CategoryService {
     return this.toResponseDto(category);
   }
 
-  async update(id: string, dto: UpdateCategoryDto): Promise<CategoryResponseDto> {
+  async update(
+    id: string,
+    dto: UpdateCategoryDto,
+  ): Promise<CategoryResponseDto> {
     const category = await this.categoryRepo.findOneBy({ id });
     if (!category) {
       throw new NotFoundException(`Category with id ${id} not found`);
@@ -93,7 +102,9 @@ export class CategoryService {
     if (dto.name && dto.name !== category.name) {
       const existing = await this.categoryRepo.findOneBy({ name: dto.name });
       if (existing && existing.status === 1) {
-        throw new ConflictException(`Category with name "${dto.name}" already exists`);
+        throw new ConflictException(
+          `Category with name "${dto.name}" already exists`,
+        );
       }
     }
 

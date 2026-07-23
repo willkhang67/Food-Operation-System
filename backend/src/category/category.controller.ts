@@ -1,6 +1,15 @@
 import {
-  Controller, Get, Post, Body, Patch, Param, Delete,
-  HttpCode, HttpStatus, ParseUUIDPipe, Query,
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpCode,
+  HttpStatus,
+  ParseUUIDPipe,
+  Query,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -30,7 +39,9 @@ export class CategoryController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string): Promise<CategoryResponseDto> {
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<CategoryResponseDto> {
     return this.categoryService.findOne(id);
   }
 
@@ -44,7 +55,9 @@ export class CategoryController {
 
   //Tạm ẩn món với status = 0
   @Delete(':id')
-  softRemove(@Param('id', ParseUUIDPipe) id: string): Promise<CategoryResponseDto> {
+  softRemove(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<CategoryResponseDto> {
     return this.categoryService.softRemove(id);
   }
 

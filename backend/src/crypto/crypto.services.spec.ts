@@ -47,8 +47,12 @@ describe('Crypto services', () => {
   });
 
   it('creates stable blind indexes for normalized emails', () => {
-    const first = blindIndex.create(blindIndex.normalizeEmail('Alice@Example.com'));
-    const second = blindIndex.create(blindIndex.normalizeEmail('alice@example.com'));
+    const first = blindIndex.create(
+      blindIndex.normalizeEmail('Alice@Example.com'),
+    );
+    const second = blindIndex.create(
+      blindIndex.normalizeEmail('alice@example.com'),
+    );
     expect(first).toBe(second);
   });
 
