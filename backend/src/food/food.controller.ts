@@ -8,6 +8,7 @@ import { CreateFoodDto } from './dto/create-food.dto';
 import { UpdateFoodDto } from './dto/update-food.dto';
 import { UpdateFoodPriceDto } from './dto/update-food-price.dto';
 import { FoodResponseDto } from './dto/food-response.dto';
+import { FoodBasicDto } from './dto/food-basic.dto';
 
 @Controller('food')
 export class FoodController {
@@ -34,8 +35,8 @@ export class FoodController {
   }
 
   // Xem toàn bộ lịch sử giá
-  @Get(':id/price-history')
-  getPriceHistory(@Param('id', ParseUUIDPipe) id: string): Promise<FoodResponseDto[]> {
+  @Get(':id/price')
+  getPriceHistory(@Param('id', ParseUUIDPipe) id: string): Promise<FoodBasicDto[]> {
     return this.foodService.getPriceHistory(id);
   }
 
@@ -49,12 +50,19 @@ export class FoodController {
   }
 
   // Update giá - tạo bản ghi mới, giữ lịch sử (taij status =0)
-  @Patch(':id/price')
+  @Patch(':name/price')
   updatePrice(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('name') name: string,
     @Body() dto: UpdateFoodPriceDto,
-  ): Promise<FoodResponseDto> {
-    return this.foodService.updatePrice(id, dto);
+  ): Promise<FoodBasicDto> {
+    return this.foodService.updatePrice(name, dto);
+  }
+
+  @Patch(':id/availability')
+  toggleAvailability(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<FoodBasicDto> {
+    return this.foodService.toggleAvailability(id);
   }
 
   @Delete(':id')

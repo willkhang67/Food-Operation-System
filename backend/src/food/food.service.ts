@@ -1,14 +1,17 @@
 import {
   Injectable, NotFoundException, ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Food } from './entities/food.entity';
 import { Category } from '../category/entities/category.entity';
+import { FoodImage } from './entities/food-image.entity';
 import { CreateFoodDto } from './dto/create-food.dto';
 import { UpdateFoodDto } from './dto/update-food.dto';
 import { UpdateFoodPriceDto } from './dto/update-food-price.dto';
 import { FoodResponseDto } from './dto/food-response.dto';
+import { FoodBasicDto } from './dto/food-basic.dto';
 
 @Injectable()
 export class FoodService {
@@ -17,6 +20,8 @@ export class FoodService {
     private readonly foodRepo: Repository<Food>,
     @InjectRepository(Category)
     private readonly categoryRepo: Repository<Category>,
+    @InjectRepository(FoodImage)
+    private readonly imageRepo: Repository<FoodImage>,
   ) {}
 
   private toResponseDto(food: Food): FoodResponseDto {
@@ -46,13 +51,29 @@ export class FoodService {
     };
   }
 
+  private toBasicResponseDto(food: Food): FoodBasicDto {
+    return {
+      id: food.id,
+      name: food.name,
+      price: Number(food.price),
+      is_available: food.is_available,
+      status: food.status,
+    };
+  }
+
   private async resolveCategories(categoryIds: string[]): Promise<Category[]> {
-    const categories = await this.categoryRepo.findBy({ id: In(categoryIds) });
+    const categories = await this.categoryRepo.findBy({ 
+      id: In(categoryIds),
+      status: 1,
+    });
+
     if (categories.length !== categoryIds.length) {
       throw new NotFoundException('Một hoặc nhiều category không tồn tại');
     }
     return categories;
   }
+
+
 
   private async findActiveByName(name: string): Promise<Food | null> {
     return this.foodRepo.findOneBy({ name, status: 1 });
@@ -76,7 +97,31 @@ export class FoodService {
     });
 
     const saved = await this.foodRepo.save(food);
-    return this.toResponseDto(saved);
+
+    if (dto.imageUrls && dto.imageUrls.length > 0) {
+      const images = dto.imageUrls.map((url) =>
+        this.imageRepo.create({ url, foodId: saved.id, nextImageId: null }),
+      );
+
+      const savedImages = await this.imageRepo.save(images);
+
+      for (let i = 0; i < savedImages.length; i++) {
+        if (i < savedImages.length - 1) {
+          savedImages[i].nextImageId = savedImages[i + 1].id;
+        }
+      }
+      await this.imageRepo.save(savedImages);
+
+      saved.headImageId = savedImages[0].id;
+      await this.foodRepo.save(saved);
+    }
+
+    const result = await this.foodRepo.findOne({
+      where: { id: saved.id },
+      relations: { categories: true, images: true },
+    });
+
+    return this.toResponseDto(result!);
   }
 
   async findAll(includeInactive = false): Promise<FoodResponseDto[]> {
@@ -90,19 +135,20 @@ export class FoodService {
     return foods.map((f) => this.toResponseDto(f));
   }
 
-  async findOne(id: string): Promise<FoodResponseDto> {
+    async findOne(id: string): Promise<FoodResponseDto> {
     const food = await this.foodRepo.findOne({
       where: { id },
-      relations: { categories: true },
+      relations: { categories: true, images: true },
     });
     if (!food) throw new NotFoundException(`Food with id ${id} not found`);
     return this.toResponseDto(food);
   }
 
   // Xem lịch sử giá - tra theo name của food
-  async getPriceHistory(id: string): Promise<FoodResponseDto[]> {
+  async getPriceHistory(id: string): Promise<FoodBasicDto[]> {
     const food = await this.foodRepo.findOneBy({ id });
-    if (!food) throw new NotFoundException(`Food with id ${id} not found`);
+    if (!food) 
+      throw new NotFoundException(`Food with id ${id} not found`);
 
     const history = await this.foodRepo.find({
       where: { name: food.name },
@@ -110,7 +156,7 @@ export class FoodService {
       order: { createdAt: 'ASC' },
     });
 
-    return history.map((f) => this.toResponseDto(f));
+    return history.map((f) => this.toBasicResponseDto(f));
   }
 
   // cập nhật chỉ description
@@ -130,12 +176,20 @@ export class FoodService {
   }
 
   // caapj nhật giá mới, tạo record mới, record giá cũ có status = 0
-  async updatePrice(id: string, dto: UpdateFoodPriceDto): Promise<FoodResponseDto> {
+  async updatePrice(name: string, dto: UpdateFoodPriceDto): Promise<FoodBasicDto> {
     const current = await this.foodRepo.findOne({
-      where: { id, status: 1 },
+      where: { name, status: 1 },
       relations: { categories: true },
     });
-    if (!current) throw new NotFoundException(`Active food with id ${id} not found`);
+    if (!current) throw new NotFoundException(`Active food with name ${name} not found`);
+
+    if (!current) {
+      throw new NotFoundException(`Active food not found`);
+    }
+
+    if (Number(current.price) === Number(dto.price)) {
+      throw new BadRequestException('Giá chưa thay đổi');
+    }
 
     current.status = 0;
     await this.foodRepo.save(current);
@@ -150,7 +204,30 @@ export class FoodService {
     });
 
     const saved = await this.foodRepo.save(newVersion);
-    return this.toResponseDto(saved);
+    return this.toBasicResponseDto(saved);
+  }
+
+  async toggleAvailability(id: string): Promise<FoodBasicDto> {
+    const food = await this.foodRepo.findOne({
+      where: {
+        id,
+        status: 1,
+      },
+      relations: {
+        categories: true,
+        images: true,
+      },
+    });
+
+    if (!food) {
+      throw new NotFoundException(`Active food with id ${id} not found`);
+    }
+
+    food.is_available = !food.is_available;
+
+    const updated = await this.foodRepo.save(food);
+
+    return this.toBasicResponseDto(updated);
   }
 
   async softRemove(id: string): Promise<FoodResponseDto> {
