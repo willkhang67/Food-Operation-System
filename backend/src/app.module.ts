@@ -10,6 +10,8 @@ import { OrderModule } from './order/order.module';
 import { PaymentModule } from './payment/payment.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+
+import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
@@ -36,14 +38,26 @@ import { ThrottlerModule } from '@nestjs/throttler';
     FoodModule,
     OrderModule,
     PaymentModule,
-    ThrottlerModule.forRoot([
+    ThrottlerModule.forRoot([ //brute-force/rate limiting protection
       {
+        name: 'default', //detalt service have 100 request per minutes
         ttl: 60_000, // this is 60s yessir
-        limit: 10, // max number of requests
+        limit: 100, // max number of requests
       },
+      {
+        name: 'auth', //auth service have 5 request per minute
+        ttl: 60_000,
+        limit: 5, 
+      }
     ]),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
