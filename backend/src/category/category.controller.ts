@@ -1,3 +1,9 @@
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { Roles } from './../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { UserRole } from './../user/enums/user-role.enum';
+
 import {
   Controller,
   Get,
@@ -11,6 +17,7 @@ import {
   ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
+
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
