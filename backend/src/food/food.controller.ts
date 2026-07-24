@@ -1,27 +1,29 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
   ParseUUIDPipe,
-  Query,
+  Patch,
+  Post,
+  UseGuards,
 } from '@nestjs/common';
-import { FoodImage } from './entities/food-image.entity';
-
-import { FoodService } from './food.service';
-import { FoodImageService } from './food-image.service';
-
+import { SkipThrottle } from '@nestjs/throttler';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { UserRole } from '../user/enums/user-role.enum';
+import { FoodBasicDto } from './dto/food-basic.dto';
 import { CreateFoodDto } from './dto/create-food.dto';
+import { FoodResponseDto } from './dto/food-response.dto';
 import { UpdateFoodDto } from './dto/update-food.dto';
 import { UpdateFoodPriceDto } from './dto/update-food-price.dto';
-import { FoodResponseDto } from './dto/food-response.dto';
-import { FoodBasicDto } from './dto/food-basic.dto';
-import { SkipThrottle } from '@nestjs/throttler';
+import { FoodImage } from './entities/food-image.entity';
+import { FoodImageService } from './food-image.service';
+import { FoodService } from './food.service';
 
 @SkipThrottle()
 @Controller('food')
@@ -32,15 +34,24 @@ export class FoodController {
   ) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   create(@Body() dto: CreateFoodDto): Promise<FoodResponseDto> {
     return this.foodService.create(dto);
   }
 
+  /** Public: active foods only. */
   @Get()
-  findAll(
-    @Query('includeInactive') includeInactive?: string,
-  ): Promise<FoodResponseDto[]> {
-    return this.foodService.findAll(includeInactive === 'true');
+  findAll(): Promise<FoodResponseDto[]> {
+    return this.foodService.findAll(false);
+  }
+
+  /** Admin: active + inactive. Must stay above :id. */
+  @Get('all')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  findAllIncludingInactive(): Promise<FoodResponseDto[]> {
+    return this.foodService.findAll(true);
   }
 
   @Get(':id')
@@ -48,7 +59,6 @@ export class FoodController {
     return this.foodService.findOne(id);
   }
 
-  // Xem toàn bộ lịch sử giá
   @Get(':id/price')
   getPriceHistory(
     @Param('id', ParseUUIDPipe) id: string,
@@ -56,8 +66,9 @@ export class FoodController {
     return this.foodService.getPriceHistory(id);
   }
 
-  // Update thông tin - chỉ description
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateFoodDto,
@@ -65,8 +76,9 @@ export class FoodController {
     return this.foodService.update(id, dto);
   }
 
-  // Update giá - tạo bản ghi mới, giữ lịch sử (taij status =0)
   @Patch(':name/price')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   updatePrice(
     @Param('name') name: string,
     @Body() dto: UpdateFoodPriceDto,
@@ -75,6 +87,8 @@ export class FoodController {
   }
 
   @Patch(':id/availability')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   toggleAvailability(
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<FoodBasicDto> {
@@ -82,19 +96,23 @@ export class FoodController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   softRemove(@Param('id', ParseUUIDPipe) id: string): Promise<FoodResponseDto> {
     return this.foodService.softRemove(id);
   }
 
   @Delete(':id/hard')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   hardRemove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.foodService.hardRemove(id);
   }
 
-  // IMAGE Food
-
   @Post(':id/images')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   addImage(
     @Param('id', ParseUUIDPipe) id: string,
     @Body('url') url: string,
@@ -108,6 +126,8 @@ export class FoodController {
   }
 
   @Delete(':id/images/:imageId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   removeImage(
     @Param('id', ParseUUIDPipe) id: string,
