@@ -1,33 +1,53 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { User } from '../../user/entities/user.entity';
 import { OrderStatus } from '../enums/order-status.enum';
+import { OrderItem } from './order-item.entity';
 
 @Entity('orders')
 export class Order {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ name: 'user_id', type: 'uuid' })
-  userId: string;
+  userId!: string;
 
-  @Column({ name: 'food_id', type: 'uuid' })
-  foodId: string;
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user!: User;
+
+  @OneToMany(() => OrderItem, (item) => item.order, { cascade: true })
+  items!: OrderItem[];
 
   @Column({ name: 'total_items', type: 'int' })
-  totalItems: number;
+  totalItems!: number;
 
-  @Column({ name: 'total_price', type: 'decimal' })
-  totalPrice: number;
+  @Column({
+    name: 'total_price',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+  })
+  totalPrice!: number;
 
-  @Column({ name: 'status', type: 'enum', enum: OrderStatus })
-  status: OrderStatus;
+  @Column({
+    type: 'enum',
+    enum: OrderStatus,
+    default: OrderStatus.PENDING,
+  })
+  status!: OrderStatus;
 
-  @Column({ name: 'created_at', type: 'timestamp' })
-  createdAt: Date;
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt!: Date;
 
-  @Column({ name: 'updated_at', type: 'timestamp' })
-  updatedAt: Date;
-
-  @Column({ name: 'update_description', type: 'text' })
-  updateDescription: string;
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt!: Date;
 }
