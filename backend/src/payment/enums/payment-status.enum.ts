@@ -1,6 +1,7 @@
 export enum PaymentStatus {
   PENDING = 'pending',
-  COMPLETED = 'completed',
+  /** Successful charge — aligns with OrderStatus.PAID. */
+  PAID = 'paid',
   FAILED = 'failed',
   CANCELLED = 'cancelled',
   EXPIRED = 'expired',

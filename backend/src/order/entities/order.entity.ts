@@ -8,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Payment } from '../../payment/entities/payment.entity';
 import { User } from '../../user/entities/user.entity';
 import { OrderStatus } from '../enums/order-status.enum';
 import { OrderItem } from './order-item.entity';
@@ -26,6 +27,10 @@ export class Order {
 
   @OneToMany(() => OrderItem, (item) => item.order, { cascade: true })
   items!: OrderItem[];
+
+  /** Multiple payment attempts allowed (failed / expired / retry). */
+  @OneToMany(() => Payment, (payment) => payment.order)
+  payments!: Payment[];
 
   @Column({ name: 'total_items', type: 'int' })
   totalItems!: number;
