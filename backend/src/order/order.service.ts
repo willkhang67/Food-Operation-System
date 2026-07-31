@@ -202,4 +202,18 @@ export class OrderService {
     const updated = await this.orderRepo.save(order);
     return this.toResponseDto(updated);
   }
+
+  /**
+   * Staff and kitchen: only paid or in-progress
+   */
+  async findKitchenQueue(): Promise<OrderResponseDto[]> {
+    const orders = await this.orderRepo.find({
+      where: {
+        status: In([OrderStatus.PAID, OrderStatus.PROCESSING]),
+      },
+      relations: { items: true },
+      order: { createdAt: 'ASC' },
+    });
+    return orders.map((order) => this.toResponseDto(order));
+  }
 }
