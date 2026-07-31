@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import Stripe from 'stripe';
+import { STRIPE_CLIENT } from './stripe/stripe.provider';
 
-/**
- * Scaffold methods removed. Implement in Step 6:
- * - createCheckoutSession(orderId, userId)
- * - handleWebhook(rawBody, signature)
- * - findByOrderId(...) — may return multiple attempts for retries
- */
 @Injectable()
-export class PaymentService {}
+export class PaymentService {
+  constructor(
+    @Inject(STRIPE_CLIENT) private readonly stripe: Stripe,
+  )
+  {}
+}
