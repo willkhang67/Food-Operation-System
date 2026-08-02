@@ -123,6 +123,7 @@ export class OrderService {
     return this.toResponseDto(saved);
   }
 
+  //find orders by user id
   async findMine(userId: string): Promise<OrderResponseDto[]> {
     const orders = await this.orderRepo.find({
       where: { userId },
@@ -132,6 +133,7 @@ export class OrderService {
     return orders.map((order) => this.toResponseDto(order));
   }
 
+  //find all orders
   async findAll(): Promise<OrderResponseDto[]> {
     const orders = await this.orderRepo.find({
       relations: { items: true },
@@ -140,6 +142,7 @@ export class OrderService {
     return orders.map((order) => this.toResponseDto(order));
   }
 
+  //find one order by id
   async findOne(
     id: string,
     userId: string,
@@ -150,6 +153,7 @@ export class OrderService {
     return this.toResponseDto(order);
   }
 
+  //update order status
   async updateStatus(
     id: string,
     dto: UpdateOrderStatusDto,
@@ -160,6 +164,7 @@ export class OrderService {
     return this.toResponseDto(updated);
   }
 
+  //cancel order
   async cancel(
     id: string,
     userId: string,
@@ -175,5 +180,40 @@ export class OrderService {
     order.status = OrderStatus.CANCELLED;
     const updated = await this.orderRepo.save(order);
     return this.toResponseDto(updated);
+  }
+
+  //mask as paid
+  //called by PaymentService Webhook only
+  //Idempotent: if already paid, return as-is (stripe may retry webhooks)
+  async markAsPaid(orderId: string): Promise<OrderResponseDto> {
+    const order = await this.requireOrderWithItems(orderId);
+    if (order.status === OrderStatus.PAID) {
+      return this.toResponseDto(order);
+    }
+    if (order.status === OrderStatus.CANCELLED) {
+      throw new BadRequestException('Cannot mark a cancelled order as paid');
+    }
+    if (order.status !== OrderStatus.PENDING) {
+      throw new BadRequestException(
+        `Cannot mark order as paid from status "${order.status}"`,
+      );
+    }
+    order.status = OrderStatus.PAID;
+    const updated = await this.orderRepo.save(order);
+    return this.toResponseDto(updated);
+  }
+
+  /**
+   * Staff and kitchen: only paid or in-progress
+   */
+  async findKitchenQueue(): Promise<OrderResponseDto[]> {
+    const orders = await this.orderRepo.find({
+      where: {
+        status: In([OrderStatus.PAID, OrderStatus.PROCESSING]),
+      },
+      relations: { items: true },
+      order: { createdAt: 'ASC' },
+    });
+    return orders.map((order) => this.toResponseDto(order));
   }
 }
