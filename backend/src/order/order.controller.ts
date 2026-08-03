@@ -38,6 +38,13 @@ export class OrderController {
     return this.orderService.findMine(user.id);
   }
 
+  @Get('kitchen')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.STAFF)
+  findKitchenQueue(): Promise<OrderResponseDto[]> {
+    return this.orderService.findKitchenQueue();
+  }
+
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.STAFF)
@@ -71,12 +78,5 @@ export class OrderController {
     @CurrentUser() user: RequestUser,
   ): Promise<OrderResponseDto> {
     return this.orderService.cancel(id, user.id, user.role);
-  }
-
-  @Get('kitchen')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.STAFF)
-  findKitchenQueue(): Promise<OrderResponseDto[]> {
-    return this.orderService.findKitchenQueue();
   }
 }
