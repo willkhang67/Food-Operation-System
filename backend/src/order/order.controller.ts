@@ -72,4 +72,11 @@ export class OrderController {
   ): Promise<OrderResponseDto> {
     return this.orderService.cancel(id, user.id, user.role);
   }
+
+  @Get('kitchen')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.STAFF)
+  findKitchenQueue(): Promise<OrderResponseDto[]> {
+    return this.orderService.findKitchenQueue();
+  }
 }
