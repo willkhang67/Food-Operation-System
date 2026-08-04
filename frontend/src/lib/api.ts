@@ -1,7 +1,7 @@
 import type { Category, Food } from "@/types";
 
 // Set NEXT_PUBLIC_API_URL in .env.local to override this default.
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://localhost:5000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
 
 class ApiError extends Error {
   status: number;
