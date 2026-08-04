@@ -54,7 +54,7 @@ export default function CustomerMenuPage() {
 
   return (
     <main className={styles.page}>
-      <div className={styles.storeHeader}>
+      {/* <div className={styles.storeHeader}>
         <div className={styles.brand}>
           <div className={styles.brandBadge}>JJ</div>
           <div>
@@ -65,7 +65,7 @@ export default function CustomerMenuPage() {
         <div className={styles.avatar}>
           <UserGlyph />
         </div>
-      </div>
+      </div> */}
 
       <CategoryTabs
         categories={categories}
