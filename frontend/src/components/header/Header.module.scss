@@ -1,5 +1,5 @@
 .header {
-  background-color: var(--color-black);
+  background-color: var(--color-surface-inverse);
 }
 
 .inner {
@@ -49,21 +49,21 @@
 
 .login {
   border: none;
-  background-color: var(--color-accent);
-  color: var(--color-text-inverse);
+  background-color: var(--color-action-inverse);
+  color: var(--color-action-inverse-text);
 
   &:hover {
-    background-color: var(--color-accent-strong);
+    background-color: var(--color-action-inverse-hover);
   }
 }
 
 .logout {
-  border: 1px solid var(--color-border-strong);
+  border: 1px solid var(--color-border-inverse);
   background: transparent;
-  color: var(--color-text-on-dark);
+  color: var(--color-text-inverse-muted);
 
   &:hover {
-    border-color: var(--color-text-muted);
+    border-color: var(--color-text-subtle);
     color: var(--color-text-inverse);
   }
 }

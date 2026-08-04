@@ -35,7 +35,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgb(0 0 0 / 0.5);
+  background-color: var(--color-overlay);
 }
 
 .soldOutBadge {
@@ -64,7 +64,7 @@
 .price {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-accent);
+  color: var(--color-text);
 }
 
 .addButton {
@@ -76,19 +76,23 @@
   justify-content: center;
   border: none;
   border-radius: var(--radius-pill);
-  background-color: var(--color-accent);
+  background-color: var(--color-action);
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--color-text-inverse);
+  color: var(--color-action-text);
   cursor: pointer;
-  transition: transform var(--transition-base);
+  transition:
+    transform var(--transition-base),
+    background-color var(--transition-base);
 
   &:enabled:hover {
+    background-color: var(--color-action-hover);
     transform: scale(1.05);
   }
 
   &:disabled {
-    background-color: #d4d4d4;
+    background-color: var(--color-surface-disabled);
+    color: var(--color-text-subtle);
     cursor: not-allowed;
   }
 }

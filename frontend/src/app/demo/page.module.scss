@@ -36,7 +36,7 @@
   transition: box-shadow var(--transition-base);
 
   &:hover {
-    box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+    box-shadow: var(--shadow-card-hover);
   }
 }
 

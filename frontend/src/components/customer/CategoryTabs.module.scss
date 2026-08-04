@@ -27,14 +27,14 @@
     border-color var(--transition-base);
 
   &:hover {
-    border-color: var(--color-accent-soft);
+    border-color: var(--color-border-strong);
   }
 }
 
 .active {
   border-color: transparent;
-  background-color: var(--color-accent);
-  color: var(--color-text-inverse);
+  background-color: var(--color-action);
+  color: var(--color-action-text);
   box-shadow: var(--shadow-card);
 
   &:hover {

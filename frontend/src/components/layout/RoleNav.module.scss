@@ -3,7 +3,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background-color: var(--color-ink);
+  background-color: var(--color-surface-inverse-soft);
   padding: 0.75rem 1rem;
 }
 
@@ -24,11 +24,11 @@
 }
 
 .active {
-  background-color: var(--color-accent);
-  color: var(--color-text-inverse);
+  background-color: var(--color-action-inverse);
+  color: var(--color-action-inverse-text);
   letter-spacing: normal;
 
   &:hover {
-    color: var(--color-text-inverse);
+    color: var(--color-action-inverse-text);
   }
 }
