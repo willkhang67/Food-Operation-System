@@ -1,6 +1,8 @@
 "use client";
 
 import type { Category } from "@/types";
+import { cn } from "@/lib/cn";
+import styles from "./CategoryTabs.module.scss";
 
 interface CategoryTabsProps {
   categories: Category[];
@@ -10,7 +12,7 @@ interface CategoryTabsProps {
 
 export default function CategoryTabs({ categories, selectedId, onSelect }: CategoryTabsProps) {
   return (
-    <div className="flex gap-2 overflow-x-auto px-4 py-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className={styles.tabs}>
       <Pill label="All" active={selectedId === "all"} onClick={() => onSelect("all")} />
       {categories.map((category) => (
         <Pill
@@ -29,11 +31,7 @@ function Pill({ label, active, onClick }: { label: string; active: boolean; onCl
     <button
       type="button"
       onClick={onClick}
-      className={
-        active
-          ? "shrink-0 rounded-full bg-[#E07B39] px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors"
-          : "shrink-0 rounded-full border border-neutral-200 bg-white px-5 py-2 text-sm font-semibold text-neutral-700 transition-colors hover:border-[#E07B39]/50"
-      }
+      className={cn(styles.pill, active && styles.active)}
     >
       {label}
     </button>

@@ -1,28 +1,29 @@
 import Image from "next/image";
 import Link from "next/link";
-import "./Header.scss";
+import { cn } from "@/lib/cn";
+import styles from "./Header.module.scss";
 
 export default function Header() {
   return (
-    <header className="header">
-      <div className="header__inner">
-        <Link href="/customer" className="header__brand">
-          <div className="header__logo">
+    <header className={styles.header}>
+      <div className={styles.inner}>
+        <Link href="/customer" className={styles.brand}>
+          <div className={styles.logo}>
             <Image
               src="/main_logo/JJ Logo 1.png"
               alt="Jolly Jumbuk Lunch Bar"
               fill
               priority
-              className="header__logo-image"
+              className={styles.logoImage}
             />
           </div>
         </Link>
 
-        <div className="header__actions">
-          <button type="button" className="header__button header__button--login">
+        <div className={styles.actions}>
+          <button type="button" className={cn(styles.button, styles.login)}>
             Log in
           </button>
-          <button type="button" className="header__button header__button--logout">
+          <button type="button" className={cn(styles.button, styles.logout)}>
             Log out
           </button>
         </div>

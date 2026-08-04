@@ -1,0 +1,40 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  text-align: center;
+}
+
+.wide {
+  max-width: var(--width-shell-wide);
+  min-height: 80vh;
+}
+
+.mobile {
+  max-width: var(--width-shell-mobile);
+  min-height: 70vh;
+  padding-bottom: 6rem;
+}
+
+.title {
+  font-family: var(--font-display), serif;
+  font-weight: 600;
+}
+
+.wide .title {
+  font-size: 1.5rem;
+}
+
+.mobile .title {
+  font-size: 1.25rem;
+}
+
+.description {
+  margin-top: 0.5rem;
+  max-width: 24rem;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}

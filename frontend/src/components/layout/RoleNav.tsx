@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/cn";
+import styles from "./RoleNav.module.scss";
 
 const ROLES = [
   { href: "/demo", label: "DEMO" },
@@ -14,18 +16,14 @@ export default function RoleNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex items-center justify-center gap-2 bg-[#211C16] px-4 py-3">
+    <nav className={styles.nav}>
       {ROLES.map((role) => {
         const isActive = pathname === role.href || pathname.startsWith(`${role.href}/`);
         return (
           <Link
             key={role.href}
             href={role.href}
-            className={
-              isActive
-                ? "rounded-full bg-[#E07B39] px-4 py-1.5 text-sm font-semibold text-white transition-colors"
-                : "rounded-full px-4 py-1.5 text-sm font-semibold tracking-wide text-neutral-400 transition-colors hover:text-white"
-            }
+            className={cn(styles.link, isActive && styles.active)}
           >
             {role.label}
           </Link>

@@ -6,6 +6,7 @@ import type { Category, Food } from "@/types";
 import CategoryTabs from "@/components/customer/CategoryTabs";
 import FoodCard from "@/components/customer/FoodCard";
 import BottomNav from "@/components/customer/BottomNav";
+import styles from "./page.module.scss";
 
 export default function CustomerMenuPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -52,21 +53,16 @@ export default function CustomerMenuPage() {
   }, [foods, selectedCategoryId]);
 
   return (
-    <main className="mx-auto max-w-md pb-24">
-      {/* Restaurant header */}
-      <div className="flex items-center justify-between border-b border-neutral-200 bg-[#F5F1E8] px-4 py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#E07B39] text-sm font-bold text-white">
-            JJ
-          </div>
+    <main className={styles.page}>
+      <div className={styles.storeHeader}>
+        <div className={styles.brand}>
+          <div className={styles.brandBadge}>JJ</div>
           <div>
-            <p className="[font-family:var(--font-display)] text-xl font-semibold leading-tight">
-              Jolly Jumbuk
-            </p>
-            <p className="text-sm text-neutral-500">Pick your feed</p>
+            <p className={styles.brandName}>Jolly Jumbuk</p>
+            <p className={styles.brandTagline}>Pick your feed</p>
           </div>
         </div>
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-200 text-neutral-500">
+        <div className={styles.avatar}>
           <UserGlyph />
         </div>
       </div>
@@ -77,21 +73,15 @@ export default function CustomerMenuPage() {
         onSelect={setSelectedCategoryId}
       />
 
-      <p className="px-4 pb-2 text-xs text-neutral-500">
-        Welshpool WA &middot; Open 6 AM &ndash; 2 PM
-      </p>
+      <p className={styles.openingHours}>Welshpool WA &middot; Open 6 AM &ndash; 2 PM</p>
 
-      <div className="flex flex-col gap-4 px-4">
-        {isLoading && <p className="py-10 text-center text-sm text-neutral-500">Loading menu…</p>}
+      <div className={styles.list}>
+        {isLoading && <p className={styles.status}>Loading menu…</p>}
 
-        {error && (
-          <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-            {error}
-          </p>
-        )}
+        {error && <p className={styles.error}>{error}</p>}
 
         {!isLoading && !error && filteredFoods.length === 0 && (
-          <p className="py-10 text-center text-sm text-neutral-500">No items in this category yet.</p>
+          <p className={styles.status}>No items in this category yet.</p>
         )}
 
         {!isLoading &&
