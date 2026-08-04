@@ -23,8 +23,8 @@ export default function Header() {
           <button type="button" className={cn(styles.button, styles.login)}>
             Log in
           </button>
-          <button type="button" className={cn(styles.button, styles.logout)}>
-            Log out
+          <button type="button" className={cn(styles.button, styles.signup)}>
+            Sign up
           </button>
         </div>
       </div>
