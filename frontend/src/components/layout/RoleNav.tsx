@@ -14,7 +14,7 @@ export default function RoleNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-0 z-50 flex items-center justify-center gap-2 bg-[#211C16] px-4 py-3">
+    <nav className="flex items-center justify-center gap-2 bg-[#211C16] px-4 py-3">
       {ROLES.map((role) => {
         const isActive = pathname === role.href || pathname.startsWith(`${role.href}/`);
         return (

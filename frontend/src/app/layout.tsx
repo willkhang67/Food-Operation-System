@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Nunito } from "next/font/google";
 import "./globals.css";
+import Header from "@/components/header/Header";
 import RoleNav from "@/components/layout/RoleNav";
 
 const fraunces = Fraunces({
@@ -27,7 +28,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         className={`${fraunces.variable} ${nunito.variable} min-h-screen bg-[#F5F1E8] text-neutral-900`}
         style={{ fontFamily: "var(--font-body)" }}
       >
-        <RoleNav />
+        <div className="sticky top-0 z-50">
+          <Header />
+          <RoleNav />
+        </div>
         {children}
       </body>
     </html>

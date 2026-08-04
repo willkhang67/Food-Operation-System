@@ -1,0 +1,66 @@
+.header {
+  background-color: #000000;
+}
+
+.header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: 0.75rem 1rem;
+}
+
+.header__brand {
+  display: flex;
+  align-items: center;
+}
+
+.header__logo {
+  position: relative;
+  height: 2.5rem;
+  width: 9rem;
+  overflow: hidden;
+}
+
+.header__logo-image {
+  object-fit: contain;
+  transform: scale(4.4);
+}
+
+.header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header__button {
+  border-radius: 9999px;
+  padding: 0.375rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+  cursor: pointer;
+}
+
+.header__button--login {
+  border: none;
+  background-color: #e07b39;
+  color: #ffffff;
+
+  &:hover {
+    background-color: #c96a2d;
+  }
+}
+
+.header__button--logout {
+  border: 1px solid #404040;
+  background: transparent;
+  color: #d4d4d4;
+
+  &:hover {
+    border-color: #737373;
+    color: #ffffff;
+  }
+}
