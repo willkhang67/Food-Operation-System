@@ -7,9 +7,9 @@ import styles from "./RoleNav.module.scss";
 
 const ROLES = [
   { href: "/demo", label: "DEMO" },
-  { href: "/customer", label: "Customer" },
-  { href: "/kitchen", label: "Kitchen" },
-  { href: "/admin", label: "Admin" },
+  { href: "/customer", label: "CUSTOMER" },
+  { href: "/kitchen", label: "KITCHEN" },
+  { href: "/admin", label: "ADMIN" },
 ] as const;
 
 export default function RoleNav() {

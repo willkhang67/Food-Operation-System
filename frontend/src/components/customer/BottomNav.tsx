@@ -22,7 +22,11 @@ export default function BottomNav() {
           const isActive = pathname === href;
           return (
             <Link key={href} href={href} className={cn(styles.tab, isActive && styles.active)}>
-              <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
+                <Icon 
+                  size={22} 
+                  strokeWidth={isActive ? 2.5 : 2}
+                  className={styles.icon}
+                />
               <span className={styles.label}>{label}</span>
             </Link>
           );
