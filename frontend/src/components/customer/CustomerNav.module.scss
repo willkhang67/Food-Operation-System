@@ -41,6 +41,18 @@
   color: var(--color-text-muted);
   transition: color var(--transition-base);
 
+  svg {
+    transition: all var(--transition-base);
+  }
+
+  .label {
+    transition: all var(--transition-base);
+  }
+
+  &:hover {
+    color: #e53935; // đỏ
+  }
+
   @include bp.md {
     flex-direction: row;
     gap: 0.5rem;
@@ -48,16 +60,30 @@
     border-bottom: 2px solid transparent;
 
     &:hover {
-      color: var(--color-text);
+      color: #e53935;
     }
   }
 }
 
 .active {
-  color: var(--color-text);
+  color: #e53935;
+
+  .label {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+  }
+
+  svg {
+    color: white;
+    background: #e53935;
+    border-radius: 999px;
+    padding: 0.55rem;
+    box-sizing: content-box;
+  }
 
   @include bp.md {
-    border-bottom-color: var(--color-text);
+    border-bottom-color: #e53935;
   }
 }
 
