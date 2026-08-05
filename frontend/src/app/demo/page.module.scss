@@ -1,3 +1,5 @@
+@use "../../styles/breakpoints" as bp;
+
 .page {
   max-width: var(--width-shell-wide);
   margin-inline: auto;
@@ -21,7 +23,7 @@
   gap: 1rem;
   margin-top: 2rem;
 
-  @media (min-width: 640px) {
+  @include bp.sm {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

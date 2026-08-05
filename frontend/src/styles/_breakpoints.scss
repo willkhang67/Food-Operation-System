@@ -1,0 +1,23 @@
+// Shared viewport breakpoints. Mobile-first: styles outside a mixin target
+// phones; wrap desktop/tablet overrides in sm/md/lg blocks.
+$breakpoint-sm: 40rem; // 640px
+$breakpoint-md: 48rem; // 768px
+$breakpoint-lg: 64rem; // 1024px
+
+@mixin sm {
+  @media (min-width: $breakpoint-sm) {
+    @content;
+  }
+}
+
+@mixin md {
+  @media (min-width: $breakpoint-md) {
+    @content;
+  }
+}
+
+@mixin lg {
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
+}

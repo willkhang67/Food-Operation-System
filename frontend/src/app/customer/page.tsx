@@ -5,7 +5,6 @@ import { api } from "@/lib/api";
 import type { Category, Food } from "@/types";
 import CategoryTabs from "@/components/customer/CategoryTabs";
 import FoodCard from "@/components/customer/FoodCard";
-import BottomNav from "@/components/customer/BottomNav";
 import styles from "./page.module.scss";
 
 export default function CustomerMenuPage() {
@@ -88,8 +87,6 @@ export default function CustomerMenuPage() {
           !error &&
           filteredFoods.map((food) => <FoodCard key={food.id} food={food} />)}
       </div>
-
-      <BottomNav />
     </main>
   );
 }

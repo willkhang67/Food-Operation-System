@@ -1,3 +1,5 @@
+@use "../../styles/breakpoints" as bp;
+
 .page {
   display: flex;
   flex-direction: column;
@@ -16,7 +18,12 @@
 .mobile {
   max-width: var(--width-shell-mobile);
   min-height: 70vh;
-  padding-bottom: 6rem;
+  padding-bottom: 6rem; // clearance for the fixed bottom nav on phones
+
+  @include bp.md {
+    min-height: 60vh;
+    padding-bottom: 0;
+  }
 }
 
 .title {

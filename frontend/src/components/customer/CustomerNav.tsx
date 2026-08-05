@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGrid, ClipboardList, User } from "lucide-react";
 import { cn } from "@/lib/cn";
-import styles from "./BottomNav.module.scss";
+import styles from "./CustomerNav.module.scss";
 
 const TABS = [
   { href: "/customer", label: "Menu", icon: LayoutGrid },
@@ -12,7 +12,7 @@ const TABS = [
   { href: "/customer/account", label: "Account", icon: User },
 ] as const;
 
-export default function BottomNav() {
+export default function CustomerNav() {
   const pathname = usePathname();
 
   return (
@@ -22,11 +22,7 @@ export default function BottomNav() {
           const isActive = pathname === href;
           return (
             <Link key={href} href={href} className={cn(styles.tab, isActive && styles.active)}>
-                <Icon 
-                  size={22} 
-                  strokeWidth={isActive ? 2.5 : 2}
-                  className={styles.icon}
-                />
+              <Icon size={22} strokeWidth={isActive ? 2.5 : 2} />
               <span className={styles.label}>{label}</span>
             </Link>
           );

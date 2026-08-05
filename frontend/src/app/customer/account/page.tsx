@@ -1,4 +1,3 @@
-import BottomNav from "@/components/customer/BottomNav";
 import PlaceholderPage from "@/components/common/PlaceholderPage";
 
 export default function AccountPage() {
@@ -7,8 +6,6 @@ export default function AccountPage() {
       title="Account"
       description="Chưa có API auth — nối vào khi có endpoint đăng nhập / hồ sơ."
       width="mobile"
-    >
-      <BottomNav />
-    </PlaceholderPage>
+    />
   );
 }
