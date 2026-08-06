@@ -47,7 +47,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
       {
         name: 'auth', //auth service have 5 request per minute
         ttl: 60_000,
-        limit: 5, 
+        limit: 5,
       }
     ]),
   ],
@@ -60,4 +60,4 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }
