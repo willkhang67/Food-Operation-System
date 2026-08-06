@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${fraunces.variable} ${nunito.variable}`}>
         <div className={styles.topBar}>
           <Header />
-          {/* <RoleNav /> */}
+          <RoleNav />
         </div>
         {children}
       </body>
