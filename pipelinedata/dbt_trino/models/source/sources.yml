@@ -1,0 +1,95 @@
+version: 2
+
+sources:
+  - name: landing
+    database: iceberg
+    schema: landing
+    description: "Tầng dữ liệu thô (Bronze Layer) nạp từ Postgres sang Iceberg thông qua Spark"
+    tables:
+      - name: categories
+        description: "Danh mục món ăn"
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+      
+      - name: foods
+        description: "Thông tin món ăn"
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+          - name: category_id
+            tests:
+              - not_null
+
+      - name: users
+        description: "Thông tin người dùng / khách hàng"
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+
+      - name: orders
+        description: "Thông tin đơn hàng"
+        tests:
+          - monthly_order_code_quality_warn:
+              config:
+                severity: warn
+              date_field: created_at
+              order_code_field: id
+              issue_type: 'DUPLICATE'
+              lookback_months: 6
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+          - name: customer_id
+            tests:
+              - not_null
+
+      - name: order_items
+        description: "Chi tiết các món ăn trong từng đơn hàng"
+        tests:
+          - left_join_null_check:
+              join_key: order_id
+              helper_table: source('landing', 'orders')
+              helper_key: id
+              warn_threshold: 0
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+          - name: order_id
+            tests:
+              - not_null
+          - name: food_id
+            tests:
+              - not_null
+
+      - name: payments
+        description: "Thông tin thanh toán của đơn hàng"
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+          - name: order_id
+            tests:
+              - not_null
+
+      - name: food_images
+        description: "Hình ảnh của món ăn"
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+          - name: food_id
+            tests:
+              - not_null
