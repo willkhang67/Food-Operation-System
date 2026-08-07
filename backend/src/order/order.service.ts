@@ -159,7 +159,30 @@ export class OrderService {
     dto: UpdateOrderStatusDto,
   ): Promise<OrderResponseDto> {
     const order = await this.requireOrderWithItems(id);
-    order.status = dto.status;
+    const next = dto.status;
+  
+    // Staff must not manually set PAID, only Stripe webhook via markAsPaid
+    if (next === OrderStatus.PAID) {
+      throw new BadRequestException(
+        'Paid status can only be set by payment confirmation',
+      );
+    }
+  
+    const allowed: Record<OrderStatus, OrderStatus[]> = {
+      [OrderStatus.PENDING]: [OrderStatus.CANCELLED],
+      [OrderStatus.PAID]: [OrderStatus.PROCESSING, OrderStatus.CANCELLED],
+      [OrderStatus.PROCESSING]: [OrderStatus.DELIVERED, OrderStatus.CANCELLED],
+      [OrderStatus.DELIVERED]: [],
+      [OrderStatus.CANCELLED]: [],
+    };
+  
+    if (!allowed[order.status]?.includes(next)) {
+      throw new BadRequestException(
+        `Invalid transition: ${order.status} to ${next}`,
+      );
+    }
+  
+    order.status = next;
     const updated = await this.orderRepo.save(order);
     return this.toResponseDto(updated);
   }

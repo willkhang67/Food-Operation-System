@@ -29,12 +29,15 @@ export class PaymentService {
     @Inject(STRIPE_CLIENT) private readonly stripe: Stripe,
     @InjectRepository(Payment)
     private readonly paymentRepo: Repository<Payment>,
+
     @InjectRepository(Order)
     private readonly orderRepo: Repository<Order>,
     private readonly orderService: OrderService,
+
     private readonly config: ConfigService,
   ) {}
 
+  //map payment entity to response dto
   private toResponseDto(payment: Payment): PaymentResponseDto {
     return {
       id: payment.id,
@@ -63,6 +66,7 @@ export class PaymentService {
       where: { id: orderId },
       relations: { items: true },
     });
+    
     if (!order) {
       throw new NotFoundException(`Order with id ${orderId} not found`);
     }

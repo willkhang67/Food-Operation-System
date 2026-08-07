@@ -70,6 +70,7 @@ export class CategoryController {
     return this.categoryService.update(id, dto);
   }
 
+  //Tạm ẩn món với status = 0
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)

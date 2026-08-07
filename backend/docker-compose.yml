@@ -1,15 +1,15 @@
-# services:
-#   postgres:
-#     image: postgres:16
-#     container_name: food-web-postgres
-#     environment:
-#       POSTGRES_USER: foodapp
-#       POSTGRES_PASSWORD: foodapp
-#       POSTGRES_DB: food_db
-#     ports:
-#       - '5432:5432'
-#     volumes:
-#       - pgdata:/var/lib/postgresql/data
+services:
+  postgres:
+    image: postgres:16
+    container_name: food-web-postgres
+    environment:
+      POSTGRES_USER: foodapp
+      POSTGRES_PASSWORD: foodapp
+      POSTGRES_DB: food_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
-# volumes:
-#   pgdata:
+volumes:
+  pgdata:
