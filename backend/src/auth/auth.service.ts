@@ -1,11 +1,17 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { randomUUID } from 'crypto';
+import { Repository } from 'typeorm';
 import { PasswordHasherService } from '../crypto/password-hasher.service';
+import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshToken } from './entities/refresh-token.entity';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { hashToken } from './utils/hash-token';
 
 /**
  * Precomputed Argon2id hash used when the user does not exist,
@@ -17,14 +23,25 @@ const TIMING_SAFE_DUMMY_HASH =
 @Injectable()
 export class AuthService {
   private readonly expiresIn: string;
+  private readonly refreshSecret: string;
+  private readonly refreshExpiresIn: string;
 
   constructor(
     private readonly userService: UserService,
     private readonly passwordHasher: PasswordHasherService,
     private readonly jwtService: JwtService,
+    @InjectRepository(RefreshToken)
+    private readonly refreshRepo: Repository<RefreshToken>,
     config: ConfigService,
   ) {
-    this.expiresIn = config.get<string>('JWT_EXPIRES_IN', '1d');
+    this.expiresIn = config.get<string>('JWT_EXPIRES_IN', '30m');
+
+    const refreshSecret = config.get<string>('JWT_REFRESH_SECRET');
+    if (!refreshSecret) {
+      throw new Error('JWT_REFRESH_SECRET is not configured');
+    }
+    this.refreshSecret = refreshSecret;
+    this.refreshExpiresIn = config.get<string>('JWT_REFRESH_EXPIRES_IN', '7d');
   }
 
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
@@ -39,17 +56,62 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const payload: JwtPayload = {
+    return this.issueTokenPair(user);
+  }
+
+  /**
+   * Mint access + refresh JWTs and persist a hashed refresh row.
+   * New logins start a new rotation family (familyId === jti).
+   */
+  private async issueTokenPair(
+    user: User,
+    familyId?: string,
+  ): Promise<AuthResponseDto> {
+    const jti = randomUUID();
+    const resolvedFamilyId = familyId ?? jti;
+
+    const accessPayload: JwtPayload = {
       sub: user.id,
       role: user.role,
+      typ: 'access',
     };
+    const accessToken = await this.jwtService.signAsync(accessPayload);
 
-    const accessToken = await this.jwtService.signAsync(payload);
+    const refreshPayload: JwtPayload = {
+      sub: user.id,
+      role: user.role,
+      typ: 'refresh',
+      jti,
+    };
+    const refreshToken = await this.jwtService.signAsync(refreshPayload, {
+      secret: this.refreshSecret,
+      expiresIn: this.refreshExpiresIn as `${number}d` | `${number}h` | `${number}m`,
+    });
+
+    const decoded = this.jwtService.decode<{ exp: number }>(refreshToken);
+    if (!decoded?.exp) {
+      throw new Error('Failed to decode refresh token expiry');
+    }
+    const expiresAt = new Date(decoded.exp * 1000);
+
+    await this.refreshRepo.save(
+      this.refreshRepo.create({
+        userId: user.id,
+        tokenHash: hashToken(refreshToken),
+        jti,
+        familyId: resolvedFamilyId,
+        expiresAt,
+        revokedAt: null,
+        replacedByJti: null,
+      }),
+    );
 
     return {
       accessToken,
+      refreshToken,
       tokenType: 'Bearer',
       expiresIn: this.expiresIn,
+      refreshExpiresIn: this.refreshExpiresIn,
       user: this.userService.toPublicUser(user),
     };
   }

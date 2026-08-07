@@ -2,10 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UnauthorizedException } from '@nestjs/common';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { PasswordHasherService } from '../crypto/password-hasher.service';
 import { UserRole } from '../user/enums/user-role.enum';
 import { UserService } from '../user/user.service';
 import { AuthService } from './auth.service';
+import { RefreshToken } from './entities/refresh-token.entity';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -14,7 +16,11 @@ describe('AuthService', () => {
     toPublicUser: jest.Mock;
   };
   let passwordHasher: { verify: jest.Mock };
-  let jwtService: { signAsync: jest.Mock };
+  let jwtService: { signAsync: jest.Mock; decode: jest.Mock };
+  let refreshRepo: {
+    create: jest.Mock;
+    save: jest.Mock;
+  };
 
   beforeEach(async () => {
     userService = {
@@ -22,7 +28,14 @@ describe('AuthService', () => {
       toPublicUser: jest.fn(),
     };
     passwordHasher = { verify: jest.fn() };
-    jwtService = { signAsync: jest.fn() };
+    jwtService = {
+      signAsync: jest.fn(),
+      decode: jest.fn(),
+    };
+    refreshRepo = {
+      create: jest.fn((value) => value),
+      save: jest.fn(async (value) => value),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -30,12 +43,16 @@ describe('AuthService', () => {
         { provide: UserService, useValue: userService },
         { provide: PasswordHasherService, useValue: passwordHasher },
         { provide: JwtService, useValue: jwtService },
+        { provide: getRepositoryToken(RefreshToken), useValue: refreshRepo },
         {
           provide: ConfigService,
           useValue: {
-            get: jest.fn((key: string, fallback?: string) =>
-              key === 'JWT_EXPIRES_IN' ? '1d' : fallback,
-            ),
+            get: jest.fn((key: string, fallback?: string) => {
+              if (key === 'JWT_EXPIRES_IN') return '30m';
+              if (key === 'JWT_REFRESH_SECRET') return 'test-refresh-secret';
+              if (key === 'JWT_REFRESH_EXPIRES_IN') return '7d';
+              return fallback;
+            }),
           },
         },
       ],
@@ -57,7 +74,7 @@ describe('AuthService', () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
-  it('returns a bearer token for valid credentials', async () => {
+  it('returns access + refresh tokens for valid credentials', async () => {
     const user = {
       id: 'user-id',
       role: UserRole.USER,
@@ -65,7 +82,12 @@ describe('AuthService', () => {
     };
     userService.findByEmail.mockResolvedValue(user);
     passwordHasher.verify.mockResolvedValue(true);
-    jwtService.signAsync.mockResolvedValue('jwt-token');
+    jwtService.signAsync
+      .mockResolvedValueOnce('access-token')
+      .mockResolvedValueOnce('refresh-token');
+    jwtService.decode.mockReturnValue({
+      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
+    });
     userService.toPublicUser.mockReturnValue({
       id: user.id,
       email: 'a@b.com',
@@ -81,8 +103,11 @@ describe('AuthService', () => {
       password: 'secret1',
     });
 
-    expect(result.accessToken).toBe('jwt-token');
+    expect(result.accessToken).toBe('access-token');
+    expect(result.refreshToken).toBe('refresh-token');
     expect(result.tokenType).toBe('Bearer');
+    expect(result.refreshExpiresIn).toBe('7d');
     expect(result.user.id).toBe('user-id');
+    expect(refreshRepo.save).toHaveBeenCalled();
   });
 });
