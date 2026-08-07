@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomUUID } from 'crypto';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { PasswordHasherService } from '../crypto/password-hasher.service';
 import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
@@ -60,14 +60,70 @@ export class AuthService {
   }
 
   /**
+   * Rotate refresh: revoke current row, mint a new pair in the same family.
+   * Presenting an already-revoked refresh revokes the whole family (theft signal).
+   */
+  async refresh(rawRefreshToken: string): Promise<AuthResponseDto> {
+    const payload = await this.verifyRefreshToken(rawRefreshToken);
+    const existing = await this.refreshRepo.findOne({
+      where: { jti: payload.jti },
+    });
+
+    if (!existing || existing.tokenHash !== hashToken(rawRefreshToken)) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    if (existing.revokedAt) {
+      await this.refreshRepo.update(
+        { familyId: existing.familyId, revokedAt: IsNull() },
+        { revokedAt: new Date() },
+      );
+      throw new UnauthorizedException('Refresh token reuse detected');
+    }
+
+    if (existing.expiresAt < new Date()) {
+      throw new UnauthorizedException('Refresh token expired');
+    }
+
+    const user = await this.userService.findEntityById(payload.sub);
+    if (!user) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const newJti = randomUUID();
+    existing.revokedAt = new Date();
+    existing.replacedByJti = newJti;
+    await this.refreshRepo.save(existing);
+
+    return this.issueTokenPair(user, existing.familyId, newJti);
+  }
+
+  /** Best-effort revoke. Always resolves so BFF logout stays idempotent. */
+  async logout(rawRefreshToken?: string): Promise<void> {
+    if (!rawRefreshToken) {
+      return;
+    }
+
+    try {
+      const payload = await this.verifyRefreshToken(rawRefreshToken);
+      await this.refreshRepo.update(
+        { jti: payload.jti, revokedAt: IsNull() },
+        { revokedAt: new Date() },
+      );
+    } catch {
+      // Intentionally swallow — BFF clears cookies regardless.
+    }
+  }
+
+  /**
    * Mint access + refresh JWTs and persist a hashed refresh row.
    * New logins start a new rotation family (familyId === jti).
    */
   private async issueTokenPair(
     user: User,
     familyId?: string,
+    jti: string = randomUUID(),
   ): Promise<AuthResponseDto> {
-    const jti = randomUUID();
     const resolvedFamilyId = familyId ?? jti;
 
     const accessPayload: JwtPayload = {
@@ -85,7 +141,10 @@ export class AuthService {
     };
     const refreshToken = await this.jwtService.signAsync(refreshPayload, {
       secret: this.refreshSecret,
-      expiresIn: this.refreshExpiresIn as `${number}d` | `${number}h` | `${number}m`,
+      expiresIn: this.refreshExpiresIn as
+        | `${number}d`
+        | `${number}h`
+        | `${number}m`,
     });
 
     const decoded = this.jwtService.decode<{ exp: number }>(refreshToken);
@@ -114,5 +173,24 @@ export class AuthService {
       refreshExpiresIn: this.refreshExpiresIn,
       user: this.userService.toPublicUser(user),
     };
+  }
+
+  private async verifyRefreshToken(
+    rawRefreshToken: string,
+  ): Promise<JwtPayload & { jti: string }> {
+    let payload: JwtPayload;
+    try {
+      payload = await this.jwtService.verifyAsync<JwtPayload>(rawRefreshToken, {
+        secret: this.refreshSecret,
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    if (payload.typ !== 'refresh' || !payload.jti) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    return payload as JwtPayload & { jti: string };
   }
 }
