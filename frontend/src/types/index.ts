@@ -1,3 +1,6 @@
+export * from "./api-error";
+export * from "./auth";
+
 export interface Category {
   id: string;
   name: string;
@@ -21,15 +24,6 @@ export interface Food {
   status: number;
   categories: Category[];
   images?: FoodImage[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  password: string;
   createdAt: string;
   updatedAt: string;
 }

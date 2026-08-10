@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
-import styles from "./Authmodal.module.scss";
+import LoginForm from "./LoginForm";
+import SignupForm from "./SignupForm";
+import styles from "./AuthModal.module.scss";
 
 export type AuthMode = "login" | "signup";
 
@@ -13,20 +15,14 @@ interface AuthModalProps {
   onSwitchMode: (mode: AuthMode) => void;
 }
 
+/**
+ * Mounted only in response to a click, so it never renders during SSR and can
+ * portal into document.body without a hydration guard.
+ *
+ * Each mode renders its own form component, so switching tabs unmounts one and
+ * mounts the other — field and error state reset on their own.
+ */
 export default function AuthModal({ mode, onClose, onSwitchMode }: AuthModalProps) {
-  const [mounted, setMounted] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    setShowPassword(false);
-    setShowConfirmPassword(false);
-  }, [mode]);
-
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -41,14 +37,6 @@ export default function AuthModal({ mode, onClose, onSwitchMode }: AuthModalProp
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose]);
-
-  if (!mounted) return null;
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    
-    console.log(`[${mode}] submit - chưa nối API`);
-  };
 
   return createPortal(
     <div className={styles.overlay} onMouseDown={onClose}>
@@ -81,94 +69,9 @@ export default function AuthModal({ mode, onClose, onSwitchMode }: AuthModalProp
         </div>
 
         {mode === "login" ? (
-          <form className={styles.form} onSubmit={handleSubmit}>
-            <label className={styles.field}>
-              <span>Email</span>
-              <input type="email" name="email" placeholder="you@example.com" required />
-            </label>
-
-            <label className={styles.field}>
-              <span>Password</span>
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="••••••••"
-                required
-              />
-            </label>
-
-            <label className={styles.checkboxField}>
-              <input
-                type="checkbox"
-                checked={showPassword}
-                onChange={(event) => setShowPassword(event.target.checked)}
-              />
-              <span>Show Password</span>
-            </label>
-
-            <button type="submit" className={styles.submit}>
-              Log In
-            </button>
-            <p className={styles.switchText}>
-              Don't have an account?{" "}
-              <button type="button" className={styles.switchLink} onClick={() => onSwitchMode("signup")}>
-                Sign Up
-              </button>
-            </p>
-          </form>
+          <LoginForm onSuccess={onClose} onSwitchToSignup={() => onSwitchMode("signup")} />
         ) : (
-          <form className={styles.form} onSubmit={handleSubmit}>
-            <label className={styles.field}>
-              <span>Full Name</span>
-              <input type="text" name="fullName" placeholder="John Doe" required />
-            </label>
-            <label className={styles.field}>
-              <span>Email</span>
-              <input type="email" name="email" placeholder="you@example.com" required />
-            </label>
-
-            <label className={styles.field}>
-              <span>Password</span>
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="••••••••"
-                required
-              />
-            </label>
-
-            <label className={styles.field}>
-              <span>Confirm Password</span>
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                name="confirmPassword"
-                placeholder="••••••••"
-                required
-              />
-            </label>
-
-            <label className={styles.checkboxField}>
-              <input
-                type="checkbox"
-                checked={showPassword && showConfirmPassword}
-                onChange={(event) => {
-                  setShowPassword(event.target.checked);
-                  setShowConfirmPassword(event.target.checked);
-                }}
-              />
-              <span>Show Password</span>
-            </label>
-
-            <button type="submit" className={styles.submit}>
-              Create Account
-            </button>
-            <p className={styles.switchText}>
-              Already have an account?{" "}
-              <button type="button" className={styles.switchLink} onClick={() => onSwitchMode("login")}>
-                Log In
-              </button>
-            </p>
-          </form>
+          <SignupForm onSuccess={onClose} onSwitchToLogin={() => onSwitchMode("login")} />
         )}
       </div>
     </div>,
