@@ -1,8 +1,14 @@
 import { refreshSession } from "@/server/auth/session";
+import { withCsrfProtection } from "@/server/http/csrf";
 import { ErrorCode, errorResponse, jsonResponse } from "@/server/http/responses";
 import type { SessionResponse } from "@/types";
 
-export async function POST(): Promise<Response> {
+/**
+ * CSRF-protected: rotation revokes the presented refresh token, so an
+ * unprotected version would let a cross-site page burn a visitor's session.
+ * The token is not rotated here — the session identity has not changed.
+ */
+export const POST = withCsrfProtection(async (): Promise<Response> => {
   const outcome = await refreshSession();
 
   switch (outcome.status) {
@@ -21,4 +27,4 @@ export async function POST(): Promise<Response> {
         "Your session has expired. Please sign in again.",
       );
   }
-}
+});

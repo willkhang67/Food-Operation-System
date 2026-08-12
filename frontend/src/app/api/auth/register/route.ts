@@ -1,10 +1,16 @@
 import { loginUpstream, registerUpstream } from "@/server/auth/auth-api";
 import { establishSession } from "@/server/auth/session";
+import { rotateCsrfToken, withCsrfProtection } from "@/server/http/csrf";
 import { readJsonBody, readString } from "@/server/http/request";
-import { ErrorCode, errorResponse, jsonResponse, upstreamErrorResponse } from "@/server/http/responses";
+import {
+  ErrorCode,
+  errorResponse,
+  jsonResponse,
+  upstreamErrorResponse,
+} from "@/server/http/responses";
 import type { RegisterResponse } from "@/types";
 
-export async function POST(request: Request): Promise<Response> {
+export const POST = withCsrfProtection(async (request: Request): Promise<Response> => {
   const body = await readJsonBody(request);
 
   if (!body) {
@@ -17,7 +23,11 @@ export async function POST(request: Request): Promise<Response> {
   const password = typeof body.password === "string" ? body.password : "";
 
   if (!name || !email || !password) {
-    return errorResponse(400, ErrorCode.ValidationError, "Name, email and password are required.");
+    return errorResponse(
+      400,
+      ErrorCode.ValidationError,
+      "Name, email and password are required.",
+    );
   }
 
   const created = await registerUpstream({ name, email, password, ...(phone ? { phone } : {}) });
@@ -39,5 +49,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const user = await establishSession(login.data);
 
+  await rotateCsrfToken();
+
   return jsonResponse<RegisterResponse>({ user, sessionStarted: true }, 201);
-}
+});

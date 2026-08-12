@@ -1,10 +1,21 @@
 import { loginUpstream } from "@/server/auth/auth-api";
 import { establishSession } from "@/server/auth/session";
+import { rotateCsrfToken, withCsrfProtection } from "@/server/http/csrf";
 import { readJsonBody, readString } from "@/server/http/request";
-import { ErrorCode, errorResponse, jsonResponse, upstreamErrorResponse } from "@/server/http/responses";
+import {
+  ErrorCode,
+  errorResponse,
+  jsonResponse,
+  upstreamErrorResponse,
+} from "@/server/http/responses";
 import type { SessionResponse } from "@/types";
 
-export async function POST(request: Request): Promise<Response> {
+/**
+ * CSRF-protected even though it starts a session: without it, a cross-site page
+ * could sign a visitor into an account the attacker controls, and any card they
+ * then save would belong to the attacker.
+ */
+export const POST = withCsrfProtection(async (request: Request): Promise<Response> => {
   const body = await readJsonBody(request);
 
   if (!body) {
@@ -29,5 +40,9 @@ export async function POST(request: Request): Promise<Response> {
 
   const user = await establishSession(result.data);
 
+  // New session, new token: a value that was observable before sign-in must not
+  // stay valid for requests made as the signed-in user.
+  await rotateCsrfToken();
+
   return jsonResponse<SessionResponse>({ user });
-}
+});

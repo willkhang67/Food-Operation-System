@@ -28,6 +28,11 @@ export interface SessionResponse {
   user: AuthUser;
 }
 
+/** Payload of /api/auth/csrf, used to bootstrap the double-submit token. */
+export interface CsrfTokenResponse {
+  csrfToken: string;
+}
+
 export interface RegisterResponse extends SessionResponse {
   /** False when the account was created but auto-login failed; ask the user to sign in. */
   sessionStarted: boolean;

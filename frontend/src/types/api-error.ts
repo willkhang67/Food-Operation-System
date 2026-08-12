@@ -9,6 +9,8 @@ export const ApiErrorCode = {
   EmailTaken: "EMAIL_TAKEN",
   Unauthenticated: "UNAUTHENTICATED",
   Forbidden: "FORBIDDEN",
+  /** The request failed the BFF's cross-site request forgery checks. */
+  CsrfRejected: "CSRF_REJECTED",
   NotFound: "NOT_FOUND",
   RateLimited: "RATE_LIMITED",
   UpstreamUnavailable: "UPSTREAM_UNAVAILABLE",
