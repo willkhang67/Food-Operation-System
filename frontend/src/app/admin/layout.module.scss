@@ -1,0 +1,12 @@
+.shell {
+  display: flex;
+  align-items: stretch;
+  min-height: calc(100vh - 4rem);
+  background-color: var(--color-surface-muted, #f5f1e8);
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  padding: 2rem 2.5rem;
+}
