@@ -1,0 +1,131 @@
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-text, #111827);
+  font-family: var(--font-display), Georgia, serif;
+}
+
+.subtitle {
+  margin: 0.125rem 0 0;
+  font-size: 0.875rem;
+  color: var(--color-text-muted, #6b7280);
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border: none;
+  border-radius: var(--radius-pill, 999px);
+  padding: 0.625rem 1.125rem;
+  background-color: #d6332a;
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color var(--transition-base, 0.15s ease);
+
+  &:hover {
+    background-color: #b8281f;
+  }
+}
+
+.stateText {
+  padding: 2rem 0;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-text-muted, #6b7280);
+}
+
+.stateError {
+  color: #b91c1c;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--color-surface, #ffffff);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-lg, 1rem);
+  overflow: hidden;
+
+  th {
+    text-align: left;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-text-muted, #9ca3af);
+    background-color: var(--color-surface-muted, #f5f1e8);
+    border-bottom: 1px solid var(--color-border, #e5e7eb);
+  }
+
+  td {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.875rem;
+    color: var(--color-text, #111827);
+    border-bottom: 1px solid var(--color-border, #e5e7eb);
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.itemName {
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--color-text-muted, #6b7280);
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-pill, 999px);
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.statusActive {
+  background-color: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+}
+
+.statusInactive {
+  background-color: rgba(107, 114, 128, 0.12);
+  color: #6b7280;
+}
+
+.editLink {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: #d6332a;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.emptyRow {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--color-text-muted, #9ca3af);
+}
