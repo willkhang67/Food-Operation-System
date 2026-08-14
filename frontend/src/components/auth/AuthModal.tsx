@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
 import { api } from "@/lib/api";
 import styles from "./Authmodal.module.scss";
+import LoginForm from "./LoginForm";
+import SignupForm from "./SignupForm";
 
 export type AuthMode = "login" | "signup";
 

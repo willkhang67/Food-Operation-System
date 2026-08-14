@@ -1,0 +1,80 @@
+@use "../../styles/breakpoints" as bp;
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: var(--width-shell-mobile);
+  margin: 3rem auto;
+  padding: 2rem 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+
+  @include bp.md {
+    margin-top: 4rem;
+    padding: 2.5rem 2rem;
+  }
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.description {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.button {
+  border-radius: var(--radius-pill);
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: var(--font-body), system-ui, sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base);
+}
+
+.primary {
+  border: 1px solid var(--color-action);
+  background-color: var(--color-action);
+  color: var(--color-action-text);
+
+  &:hover {
+    background-color: var(--color-action-hover);
+    border-color: var(--color-action-hover);
+  }
+}
+
+.secondary {
+  border: 1px solid var(--color-border-strong);
+  background-color: transparent;
+  color: var(--color-text);
+
+  &:hover {
+    background-color: var(--color-surface-muted);
+  }
+}

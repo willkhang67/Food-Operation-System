@@ -126,7 +126,7 @@ export default function AdminFoodPage() {
                   <div className={styles.itemCell}>
                     <div className={styles.thumb}>
                       {food.images?.[0]?.url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                        
                         <img src={food.images[0].url} alt={food.name} />
                       ) : (
                         <span className={styles.thumbFallback}>{food.name.slice(0, 2)}</span>
@@ -156,7 +156,7 @@ export default function AdminFoodPage() {
             {visibleFoods.length === 0 && (
               <tr>
                 <td colSpan={5} className={styles.emptyRow}>
-                  Không có món nào phù hợp.
+                  No suitable items found
                 </td>
               </tr>
             )}

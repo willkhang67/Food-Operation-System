@@ -59,6 +59,7 @@ export class FoodController {
     return this.foodService.findOne(id);
   }
 
+  // Xem toàn bộ lịch sử giá
   @Get(':id/price')
   getPriceHistory(
     @Param('id', ParseUUIDPipe) id: string,
@@ -66,6 +67,7 @@ export class FoodController {
     return this.foodService.getPriceHistory(id);
   }
 
+  // Update thông tin - chỉ description
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
@@ -76,6 +78,7 @@ export class FoodController {
     return this.foodService.update(id, dto);
   }
 
+  // Update giá - tạo bản ghi mới, giữ lịch sử (taij status =0)
   @Patch(':name/price')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
@@ -109,6 +112,8 @@ export class FoodController {
   hardRemove(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.foodService.hardRemove(id);
   }
+
+  // IMAGE Food
 
   @Post(':id/images')
   @UseGuards(JwtAuthGuard, RolesGuard)

@@ -1,0 +1,29 @@
+# Storage / Databases Data (VERY IMPORTANT TO IGNORE)
+data/
+data_source/
+
+# Environment Variables (Security)
+.env
+
+# DBT specific files
+dbt_trino/target/
+dbt_trino/dbt_packages/
+dbt_trino/logs/
+
+# Python specific files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Airflow / Docker logs
+logs/
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db

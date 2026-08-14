@@ -80,9 +80,63 @@
   background-color: transparent;
   color: var(--color-text-inverse);
 
-  &:hover {
+  &:hover:not(:disabled) {
     border-color: var(--color-text-inverse);
     background-color: rgb(255 255 255 / 0.08);
+  }
+
+  &:disabled {
+    color: var(--color-text-subtle);
+    cursor: not-allowed;
+  }
+}
+
+.userName {
+  max-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-inverse-muted);
+
+  @include bp.md {
+    font-size: 0.875rem;
+  }
+}
+
+/* Reserves the width of the two signed-out buttons so the header does not
+   reflow when the session resolves. */
+.skeleton {
+  width: 9.5rem;
+  height: 1.9rem;
+  border-radius: var(--radius-pill);
+  background-color: rgb(255 255 255 / 0.08);
+  animation: pulse 1.4s ease-in-out infinite;
+
+  @include bp.md {
+    width: 11rem;
+    height: 2.1rem;
+  }
+}
+
+.actionError {
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-inverse-muted);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
   }
 }
 

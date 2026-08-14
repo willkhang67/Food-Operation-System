@@ -61,6 +61,9 @@ export default function Header() {
               alt="Jolly Jumbuk Lunch Bar"
               fill
               priority
+              // The box is 136/168px wide but the image is scaled 4.7x inside
+              // it, so request a source large enough to stay sharp.
+              sizes="(min-width: 48rem) 800px, 640px"
               className={styles.logoImage}
             />
           </div>

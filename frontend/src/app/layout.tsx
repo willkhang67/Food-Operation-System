@@ -3,6 +3,8 @@ import { Fraunces, Nunito } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/header/Header";
 import RoleNav from "@/components/layout/RoleNav";
+import { AuthDialogProvider } from "@/providers/AuthDialogProvider";
+import { AuthProvider } from "@/providers/AuthProvider";
 import styles from "./layout.module.scss";
 
 const fraunces = Fraunces({
@@ -24,13 +26,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi">
+    <html lang="en">
       <body className={`${fraunces.variable} ${nunito.variable}`}>
-        <div className={styles.topBar}>
-          <Header />
-          <RoleNav />
-        </div>
-        {children}
+        <AuthProvider>
+          <AuthDialogProvider>
+            <div className={styles.topBar}>
+              <Header />
+              <RoleNav />
+            </div>
+            {children}
+          </AuthDialogProvider>
+        </AuthProvider>
       </body>
     </html>
   );

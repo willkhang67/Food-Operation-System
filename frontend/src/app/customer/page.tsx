@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { api } from "@/lib/api";
+import { isAbortError, isApiError, menuApi } from "@/lib/api";
 import type { Category, Food } from "@/types";
 import CategoryTabs from "@/components/customer/CategoryTabs";
 import FoodCard from "@/components/customer/FoodCard";
@@ -15,33 +15,29 @@ export default function CustomerMenuPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
+    const { signal } = controller;
 
     async function load() {
       setIsLoading(true);
       setError(null);
       try {
         const [categoriesRes, foodsRes] = await Promise.all([
-          api.getCategories(),
-          api.getFoods(),
+          menuApi.getCategories({ signal }),
+          menuApi.getFoods({ signal }),
         ]);
-        if (!cancelled) {
-          setCategories(categoriesRes);
-          setFoods(foodsRes);
-        }
+        setCategories(categoriesRes);
+        setFoods(foodsRes);
       } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load menu.");
-        }
+        if (isAbortError(err)) return;
+        setError(isApiError(err) ? err.message : "Failed to load menu.");
       } finally {
-        if (!cancelled) setIsLoading(false);
+        if (!signal.aborted) setIsLoading(false);
       }
     }
 
     load();
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, []);
 
   const filteredFoods = useMemo(() => {
@@ -53,19 +49,6 @@ export default function CustomerMenuPage() {
 
   return (
     <main className={styles.page}>
-      {/* <div className={styles.storeHeader}>
-        <div className={styles.brand}>
-          <div className={styles.brandBadge}>JJ</div>
-          <div>
-            <p className={styles.brandName}>Jolly Jumbuk</p>
-            <p className={styles.brandTagline}>Pick your feed</p>
-          </div>
-        </div>
-        <div className={styles.avatar}>
-          <UserGlyph />
-        </div>
-      </div> */}
-
       <CategoryTabs
         categories={categories}
         selectedId={selectedCategoryId}
@@ -88,14 +71,5 @@ export default function CustomerMenuPage() {
           filteredFoods.map((food) => <FoodCard key={food.id} food={food} />)}
       </div>
     </main>
-  );
-}
-
-function UserGlyph() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4 20c0-4.418 3.582-7 8-7s8 2.582 8 7" />
-    </svg>
   );
 }

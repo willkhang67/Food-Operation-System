@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: dim_users
+    description: "Dimension table for users"
+  - name: dim_foods
+    description: "Dimension table for foods"
+  - name: fct_orders
+    description: "Fact table for orders"
+  - name: fct_order_items
+    description: "Fact table for order items"
+  - name: rpt_daily_sales
+    description: "Daily sales reporting"
+  - name: rpt_food_performance
+    description: "Food performance reporting"

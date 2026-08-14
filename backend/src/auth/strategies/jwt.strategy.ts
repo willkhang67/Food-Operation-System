@@ -25,6 +25,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: JwtPayload): Promise<RequestUser> {
+    // Reject refresh tokens (and any JWT missing typ=access) on protected routes.
+    if (payload.typ !== 'access') {
+      throw new UnauthorizedException('Invalid token');
+    }
+
     const user = await this.userService.findEntityById(payload.sub);
     if (!user) {
       throw new UnauthorizedException('Invalid token');

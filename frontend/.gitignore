@@ -63,3 +63,5 @@ secrets/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.agents

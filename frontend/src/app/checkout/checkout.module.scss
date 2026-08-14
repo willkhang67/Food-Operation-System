@@ -1,0 +1,136 @@
+@use "../../styles/breakpoints" as bp;
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: var(--width-shell-mobile);
+  margin: 3rem auto;
+  padding: 2rem 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+
+  @include bp.md {
+    margin-top: 4rem;
+    padding: 2.5rem 2rem;
+  }
+}
+
+.badge {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  border: 2px solid var(--color-border-strong);
+}
+
+.positive {
+  border-color: var(--color-text);
+  background-color: var(--color-text);
+}
+
+.neutral {
+  background-color: var(--color-surface-muted);
+}
+
+.negative {
+  background-color: transparent;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.description {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-muted);
+  text-align: left;
+}
+
+.summaryRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.summaryValue {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.reference {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: var(--font-body), system-ui, sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base);
+}
+
+.primary {
+  border: 1px solid var(--color-action);
+  background-color: var(--color-action);
+  color: var(--color-action-text);
+
+  &:hover {
+    background-color: var(--color-action-hover);
+    border-color: var(--color-action-hover);
+  }
+}
+
+.secondary {
+  border: 1px solid var(--color-border-strong);
+  background-color: transparent;
+  color: var(--color-text);
+
+  &:hover {
+    background-color: var(--color-surface-muted);
+  }
+}
