@@ -3,37 +3,53 @@
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { api } from "@/lib/api";
+import { isAbortError, isApiError, menuApi } from "@/lib/api";
+import { useAuth } from "@/providers/AuthProvider";
 import type { Category } from "@/types";
 import styles from "./page.module.scss";
 
 export default function AdminCategoriesPage() {
+  const { user, status } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const isAdmin = user?.role?.toUpperCase() === "ADMIN";
+
   useEffect(() => {
-    let cancelled = false;
+    if (status === "loading") {
+      setIsLoading(true);
+      return;
+    }
+
+    if (status !== "authenticated" || !isAdmin) {
+      setCategories([]);
+      setError("You need to log in with an Admin account");
+      setIsLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
 
     async function load() {
       setIsLoading(true);
       setError(null);
       try {
-        
-        const data = await api.getCategories();
-        if (!cancelled) setCategories(data);
+        // TODO: đổi sang endpoint admin (/category/all) khi cần thấy cả
+        // category đang inactive, chưa chỉ active như hiện tại.
+        const data = await menuApi.getCategories({ signal: controller.signal });
+        setCategories(data);
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load categories.");
+        if (isAbortError(err)) return;
+        setError(isApiError(err) ? err.message : "Failed to load categories.");
       } finally {
-        if (!cancelled) setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       }
     }
 
     load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    return () => controller.abort();
+  }, [status, isAdmin]);
 
   return (
     <div>
@@ -77,6 +93,7 @@ export default function AdminCategoriesPage() {
                   </span>
                 </td>
                 <td>
+                  {/* TODO: mở form/trang edit khi có chức năng chỉnh sửa */}
                   <button type="button" className={styles.editLink}>
                     Edit
                   </button>
@@ -87,7 +104,7 @@ export default function AdminCategoriesPage() {
             {categories.length === 0 && (
               <tr>
                 <td colSpan={4} className={styles.emptyRow}>
-                  No categories yet
+                  Chưa có category nào.
                 </td>
               </tr>
             )}

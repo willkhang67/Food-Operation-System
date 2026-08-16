@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { api } from "@/lib/api";
+import { api, isAbortError, isApiError, menuApi } from "@/lib/api";
+import { useAuth } from "@/providers/AuthProvider";
 import type { Food } from "@/types";
 import StatusSwitch from "@/components/admin/StatusSwitch";
 import styles from "./page.module.scss";
@@ -17,47 +18,48 @@ const FILTERS: { mode: FilterMode; label: string }[] = [
 ];
 
 export default function AdminFoodPage() {
+  const { user, status } = useAuth();
   const [foods, setFoods] = useState<Food[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterMode>("all");
 
-  const loadFoods = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      if (!api.isAuthenticated() || !api.isAdmin()) {
-        throw new Error("You need to log in with an Admin account");
-      }
-      
-      const data = await api.getFoods();
-      setFoods(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load foods.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const isAdmin = user?.role?.toUpperCase() === "ADMIN";
 
   useEffect(() => {
-    loadFoods();
+    if (status === "loading") {
+      setIsLoading(true);
+      return;
+    }
 
-    const handleLogin = () => loadFoods();
-    
-    const handleLogout = () => {
+    if (status !== "authenticated" || !isAdmin) {
       setFoods([]);
-      setError("You must be logged in to view admin panel.");
+      setError("You need to log in with an Admin account");
       setIsLoading(false);
-    };
+      return;
+    }
 
-    window.addEventListener("auth:login", handleLogin);
-    window.addEventListener("auth:logout", handleLogout);
+    const controller = new AbortController();
 
-    return () => {
-      window.removeEventListener("auth:login", handleLogin);
-      window.removeEventListener("auth:logout", handleLogout);
-    };
-  }, [loadFoods]);
+    async function load() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // TODO: đổi sang api.getAdminFoods() khi cần thấy cả món hidden
+        // trực tiếp từ /food/all thay vì lọc client-side như hiện tại.
+        const data = await menuApi.getFoods({ signal: controller.signal });
+        setFoods(data);
+      } catch (err) {
+        if (isAbortError(err)) return;
+        setError(isApiError(err) ? err.message : "Failed to load foods.");
+      } finally {
+        if (!controller.signal.aborted) setIsLoading(false);
+      }
+    }
+
+    load();
+    return () => controller.abort();
+  }, [status, isAdmin]);
 
   const visibleFoods = useMemo(() => {
     if (filter === "available") return foods.filter((food) => food.is_available);
@@ -75,7 +77,7 @@ export default function AdminFoodPage() {
       await api.toggleFoodAvailability(foodId);
     } catch (err) {
       setFoods(previousFoods);
-      setError(err instanceof Error ? err.message : "Failed to update availability.");
+      setError(isApiError(err) ? err.message : "Failed to update availability.");
     }
   };
 
@@ -126,7 +128,7 @@ export default function AdminFoodPage() {
                   <div className={styles.itemCell}>
                     <div className={styles.thumb}>
                       {food.images?.[0]?.url ? (
-                        
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={food.images[0].url} alt={food.name} />
                       ) : (
                         <span className={styles.thumbFallback}>{food.name.slice(0, 2)}</span>
