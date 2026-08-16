@@ -1,55 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
-import AuthModal, { type AuthMode } from "@/components/auth/AuthModal";
-import { api } from "@/lib/api";
+import { useAuth } from "@/providers/AuthProvider";
+import { useAuthDialog } from "@/providers/AuthDialogProvider";
 import styles from "./Header.module.scss";
 
-interface AuthUser {
-  [key: string]: unknown;
-}
-
-function getRoleLabel(user: AuthUser | null): string | null {
-  if (!user) return null;
-  const role = user["role"];
-  if (typeof role !== "string" || !role) return null;
+function getRoleLabel(role?: string | null): string | null {
+  if (!role) return null;
   return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
 }
 
 export default function Header() {
-  const [authMode, setAuthMode] = useState<AuthMode | null>(null);
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const { user, status, logout } = useAuth();
+  const { openAuth } = useAuthDialog();
+  const router = useRouter();
 
-  useEffect(() => {
-    const handleLogoutEvent = () => setUser(null);
-    const handleLoginEvent = () => setUser(api.getUser());
+  const roleLabel = getRoleLabel(user?.role);
+  const isLoggedIn = status === "authenticated" && !!user;
 
-    window.addEventListener("auth:logout", handleLogoutEvent);
-    window.addEventListener("auth:login", handleLoginEvent);
-    return () => {
-      window.removeEventListener("auth:logout", handleLogoutEvent);
-      window.removeEventListener("auth:login", handleLoginEvent);
-    };
-  }, []);
-
-  useEffect(() => {
-    const savedUser = api.getUser();
-    if (savedUser) setUser(savedUser);
-  }, []);
-
-  const handleLoginSuccess = (userData: AuthUser) => {
-    setUser(userData);
+  const handleLogout = async () => {
+    await logout();
+    router.push("/customer");
   };
-
-  const handleLogout = () => {
-    api.clearAuthData();
-    setUser(null);
-  };
-
-  const roleLabel = getRoleLabel(user);
 
   return (
     <header className={styles.header}>
@@ -61,8 +36,6 @@ export default function Header() {
               alt="Jolly Jumbuk Lunch Bar"
               fill
               priority
-              // The box is 136/168px wide but the image is scaled 4.7x inside
-              // it, so request a source large enough to stay sharp.
               sizes="(min-width: 48rem) 800px, 640px"
               className={styles.logoImage}
             />
@@ -70,11 +43,11 @@ export default function Header() {
         </Link>
 
         <div className={styles.actions}>
-          {user ? (
+          {isLoggedIn ? (
             <>
               <div className={styles.userInfo}>
                 <span className={styles.userName}>
-                  Hi, {(user.name as string) || (user.email as string) || "User"}
+                  Hi, {user.name ?? user.email ?? "User"}
                 </span>
                 {roleLabel && <span className={styles.userRole}>{roleLabel}</span>}
               </div>
@@ -91,14 +64,14 @@ export default function Header() {
               <button
                 type="button"
                 className={cn(styles.button, styles.login)}
-                onClick={() => setAuthMode("login")}
+                onClick={() => openAuth("login")}
               >
                 Log in
               </button>
               <button
                 type="button"
                 className={cn(styles.button, styles.signup)}
-                onClick={() => setAuthMode("signup")}
+                onClick={() => openAuth("signup")}
               >
                 Sign up
               </button>
@@ -106,15 +79,6 @@ export default function Header() {
           )}
         </div>
       </div>
-
-      {authMode && (
-        <AuthModal
-          mode={authMode}
-          onClose={() => setAuthMode(null)}
-          onSwitchMode={setAuthMode}
-          onLoginSuccess={handleLoginSuccess}
-        />
-      )}
     </header>
   );
 }
