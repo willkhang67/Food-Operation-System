@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
-import { api } from "@/lib/api";
-import styles from "./Authmodal.module.scss";
-import LoginForm from "./LoginForm";
-import SignupForm from "./SignupForm";
+import { useAuth } from "@/providers/AuthProvider";
+import styles from "./AuthModal.module.scss";
 
 export type AuthMode = "login" | "signup";
 
@@ -14,15 +12,11 @@ interface AuthModalProps {
   mode: AuthMode;
   onClose: () => void;
   onSwitchMode: (mode: AuthMode) => void;
-  onLoginSuccess?: (user: Record<string, unknown>) => void;
 }
 
-export default function AuthModal({
-  mode,
-  onClose,
-  onSwitchMode,
-  onLoginSuccess,
-}: AuthModalProps) {
+export default function AuthModal({ mode, onClose, onSwitchMode }: AuthModalProps) {
+  const { login, register } = useAuth();
+
   const [mounted, setMounted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -66,11 +60,7 @@ export default function AuthModal({
     const password = formData.get("password") as string;
 
     try {
-      
-      const { accessToken, user } = await api.login({ email, password });
-
-      api.setAuthData(accessToken, user);
-      onLoginSuccess?.(user);
+      await login({ email, password });
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed. Please try again.");
@@ -79,10 +69,26 @@ export default function AuthModal({
     }
   };
 
-  
+  // Backend chưa có /auth/register nên register() sẽ throw — hiện lỗi rõ
+  // ràng thay vì im lặng. Bỏ đoạn try/catch báo lỗi này khi backend đã có.
   const handleSignUp = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    alert("Sign up feature is coming soon! 🚀");
+    setIsLoading(true);
+    setError(null);
+
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const name = formData.get("fullName") as string;
+
+    try {
+      const result = await register({ email, password, name });
+      if (result.sessionStarted) onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign up failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return createPortal(
@@ -171,12 +177,12 @@ export default function AuthModal({
           <form className={styles.form} onSubmit={handleSignUp}>
             <label className={styles.field}>
               <span>Full Name</span>
-              <input type="text" name="fullName" placeholder="John Doe" required disabled />
+              <input type="text" name="fullName" placeholder="John Doe" required disabled={isLoading} />
             </label>
 
             <label className={styles.field}>
               <span>Email</span>
-              <input type="email" name="email" placeholder="you@example.com" required disabled />
+              <input type="email" name="email" placeholder="you@example.com" required disabled={isLoading} />
             </label>
 
             <label className={styles.field}>
@@ -187,7 +193,7 @@ export default function AuthModal({
                 placeholder="••••••••"
                 required
                 minLength={6}
-                disabled
+                disabled={isLoading}
               />
             </label>
 
@@ -199,7 +205,7 @@ export default function AuthModal({
                 placeholder="••••••••"
                 required
                 minLength={6}
-                disabled
+                disabled={isLoading}
               />
             </label>
 
@@ -211,18 +217,13 @@ export default function AuthModal({
                   setShowPassword(e.target.checked);
                   setShowConfirmPassword(e.target.checked);
                 }}
-                disabled
+                disabled={isLoading}
               />
               <span>Show Password</span>
             </label>
 
-            <button
-              type="submit"
-              className={styles.submit}
-              disabled
-              style={{ opacity: 0.6, cursor: "not-allowed" }}
-            >
-              Create Account (Coming Soon)
+            <button type="submit" className={styles.submit} disabled={isLoading}>
+              {isLoading ? "Creating..." : "Create Account"}
             </button>
 
             <p className={styles.switchText}>

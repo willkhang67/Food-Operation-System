@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { UtensilsCrossed, Tags } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { UtensilsCrossed, Tags, LogOut } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { useAuth } from "@/providers/AuthProvider";
+import type { AuthUser } from "@/types";
 import styles from "./AdminSidebar.module.scss";
 
 const NAV_ITEMS = [
@@ -11,8 +13,20 @@ const NAV_ITEMS = [
   { href: "/admin/categories", label: "Category", icon: Tags },
 ] as const;
 
+function getDisplayName(user: AuthUser | null): string {
+  if (!user) return "Chưa đăng nhập";
+  return user.name ?? user.email ?? "Admin";
+}
+
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/customer");
+  };
 
   return (
     <aside className={styles.sidebar}>
@@ -41,9 +55,23 @@ export default function AdminSidebar() {
       </nav>
 
       <div className={styles.loggedInAs}>
-        {/* TODO: thay bằng thông tin user thật khi có auth */}
         <span className={styles.loggedInAsLabel}>LOGGED IN AS</span>
-        <span className={styles.loggedInAsValue}>Chưa đăng nhập</span>
+        <div className={styles.loggedInAsRow}>
+          <span className={styles.loggedInAsValue} title={getDisplayName(user)}>
+            {getDisplayName(user)}
+          </span>
+          {user && (
+            <button
+              type="button"
+              className={styles.logoutButton}
+              onClick={handleLogout}
+              aria-label="Đăng xuất"
+              title="Đăng xuất"
+            >
+              <LogOut size={14} />
+            </button>
+          )}
+        </div>
       </div>
     </aside>
   );
