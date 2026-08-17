@@ -91,6 +91,7 @@ cookie-writing subdomains.
 | `API_URL`        | always              | Base URL of the Nest API                     |
 | `API_TIMEOUT_MS` | no (default 20000)  | Raise for hosts with cold starts             |
 | `CSRF_SECRET`    | **in production**   | ≥32 chars, `openssl rand -base64 32`         |
+| `INTERNAL_PROXY_SECRET` | no       | Shared with the API; see rate limiting below |
 
 `CSRF_SECRET` fails closed: production boots without it, but every write throws
 rather than silently downgrading to a guessable key. Outside production a
@@ -99,6 +100,44 @@ built-in development value is used so `git clone && npm run dev` works.
 Rotating the secret invalidates every outstanding CSRF token. Users see one
 rejected write, which the client retries transparently. It does not sign anyone
 out.
+
+## Rate limiting and the client IP
+
+Every browser request reaches the API through this app, so from the API's side
+the socket address is always the BFF's. Left alone the throttler treats the whole
+user base as one client — five login attempts a minute for everybody.
+
+Forwarding `x-forwarded-for` is not enough on its own, and trusting it blindly is
+worse than the original problem: the API has a public URL, so anyone can bypass
+this app and send whatever forwarding header they like, and a fresh spoofed IP per
+attempt buys unlimited login tries. Express's `trust proxy` does not fix that
+either, because it decides trust by counting network hops and a direct attacker
+controls their own hop.
+
+So trust comes from a shared secret rather than from network position:
+
+1. `upstreamFetch` resolves the visitor's IP from the incoming request and sends
+   it as `x-client-ip`, alongside `x-internal-proxy-secret`. It lives there, not
+   in `proxy.ts`, so the auth routes get it too — login is where per-visitor
+   throttling matters most.
+2. `ProxyAwareThrottlerGuard` on the API compares that secret in constant time
+   and only then believes `x-client-ip`. Otherwise it buckets by socket address.
+
+Two properties worth preserving:
+
+- **It fails closed.** A missing or wrong secret means everyone shares one
+  bucket: more restrictive, never less. That is why absence is tolerated rather
+  than fatal — but a *weak* secret is rejected in production, since a guessable
+  one hands out IP spoofing to anybody.
+- **The trust is scoped to the throttler.** Global `trust proxy` stays off, so a
+  forged header cannot reach `req.ip` anywhere else.
+
+Set the same value in both apps, or neither. One side alone does nothing.
+
+One assumption: the platform in front of this app must overwrite inbound
+`x-forwarded-for` rather than append to it. Vercel does. Deploying the BFF with
+no trusted edge in front of it would let a browser choose its own rate-limit
+bucket.
 
 ## Stripe
 
@@ -111,7 +150,7 @@ deny-list and returns 404. Point `STRIPE_WEBHOOK_URL` at the API host, not Verce
 
 **Return URLs belong to this app.** Nest builds them from its own `FRONTEND_URL`:
 
-- `${FRONTEND_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`
+- `${FRONTEND_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}&orderId=…`
 - `${FRONTEND_URL}/checkout/cancel`
 
 Both pages are `noindex`: return URLs carry order references.
@@ -123,22 +162,15 @@ webhook. Because the webhook can land a moment after the redirect, the page poll
 for up to 20 seconds and then says "still confirming" rather than claiming
 success it cannot verify.
 
-### Known gap: `success_url` carries no order id
+### The order id in `success_url`
 
-`success_url` includes `session_id` but no `orderId`, and the API has no endpoint
-that resolves a Stripe session id to an order. So the success page cannot
-currently name the order it is confirming, and falls back to a generic
-"we are processing it" message with a link to order history.
+`success_url` carries `orderId` as well as `session_id`, because the API has no
+endpoint that resolves a Stripe session id back to an order — without it the
+success page could not name what it was confirming.
 
-The fix is one line in `payment.service.ts`:
-
-```ts
-success_url: `${frontendUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&orderId=${order.id}`,
-```
-
-Passing the order id in the URL is safe: `GET /order/:id` is guarded and checks
-ownership, so a forged id returns 403 or 404 rather than someone else's order.
-The page already handles the parameter — it activates as soon as the API sends it.
+Passing it in the URL is safe: `GET /order/:id` is guarded and checks ownership,
+so a forged id returns 403 or 404 rather than someone else's order. It is a
+pointer, not proof; the signed webhook is still what marks the order paid.
 
 ## Still outstanding
 
@@ -146,5 +178,5 @@ The page already handles the parameter — it activates as soon as the API sends
   immediately. The BFF de-duplicates concurrent redemptions, but a retry after a
   dropped response still replays a spent token and trips theft detection. A few
   seconds of grace on the API side would remove the last sharp edge.
-- **Client IP for rate limiting (API).** The proxy forwards `x-forwarded-for`,
-  but until Nest trusts it, every user looks like one IP to the throttler.
+- **Session-scoped cart.** The cart lives in `sessionStorage`, so it does not
+  follow a customer between devices or survive closing the tab.

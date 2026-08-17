@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { isAbortError, isApiError, menuApi } from "@/lib/api";
+import { useCart } from "@/providers/CartProvider";
 import type { Category, Food } from "@/types";
 import CategoryTabs from "@/components/customer/CategoryTabs";
 import FoodCard from "@/components/customer/FoodCard";
 import styles from "./page.module.scss";
 
 export default function CustomerMenuPage() {
+  const { add } = useCart();
   const [categories, setCategories] = useState<Category[]>([]);
   const [foods, setFoods] = useState<Food[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState("all");
@@ -68,7 +70,9 @@ export default function CustomerMenuPage() {
 
         {!isLoading &&
           !error &&
-          filteredFoods.map((food) => <FoodCard key={food.id} food={food} />)}
+          filteredFoods.map((food) => (
+            <FoodCard key={food.id} food={food} onAdd={add} />
+          ))}
       </div>
     </main>
   );
