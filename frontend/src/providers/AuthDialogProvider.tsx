@@ -34,7 +34,12 @@ export function AuthDialogProvider({ children }: { children: ReactNode }) {
   return (
     <AuthDialogContext.Provider value={{ openAuth, closeAuth }}>
       {children}
-      {mode && <AuthModal mode={mode} onClose={closeAuth} onSwitchMode={setMode} />}
+      {/*
+        Keyed by mode so switching tabs remounts the dialog with empty fields and
+        no stale error, rather than resetting that state from an effect — which
+        would re-render the open dialog twice on every switch.
+      */}
+      {mode && <AuthModal key={mode} mode={mode} onClose={closeAuth} onSwitchMode={setMode} />}
     </AuthDialogContext.Provider>
   );
 }
