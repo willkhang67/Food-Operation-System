@@ -7,6 +7,8 @@ export const ApiErrorCode = {
   ValidationError: "VALIDATION_ERROR",
   InvalidCredentials: "INVALID_CREDENTIALS",
   EmailTaken: "EMAIL_TAKEN",
+  /** Generic upstream 409 — the request collided with existing state. */
+  Conflict: "CONFLICT",
   Unauthenticated: "UNAUTHENTICATED",
   Forbidden: "FORBIDDEN",
   /** The request failed the BFF's cross-site request forgery checks. */
