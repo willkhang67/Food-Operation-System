@@ -21,7 +21,7 @@ export default function CartBar({ totalItems, estimatedTotal, onOpen }: CartBarP
           <span className={styles.count}>{totalItems}</span>
         </span>
         <span className={styles.label}>View cart</span>
-        <span className={styles.notice}>Cart reset when you refresh/change/remove tabs</span>
+        <span className={styles.notice}>Cart resets on tab close</span>
         <span className={styles.total}>${estimatedTotal.toFixed(2)}</span>
       </button>
     </div>
