@@ -90,10 +90,14 @@ export function upstreamErrorResponse(
     case 404:
       return errorResponse(404, ErrorCode.NotFound, message ?? "Not found.");
     case 409:
+      // Defaults to the generic code on purpose. The proxy forwards conflicts
+      // from every resource, and reporting "already paid" as EMAIL_TAKEN would
+      // make the client branch on a code that has nothing to do with the call.
+      // Routes that know what a 409 means pass `conflictCode` explicitly.
       return errorResponse(
         409,
-        options.conflictCode ?? ErrorCode.EmailTaken,
-        message ?? "That record already exists.",
+        options.conflictCode ?? ErrorCode.Conflict,
+        message ?? "That request conflicts with the current state.",
       );
     case 429:
       return errorResponse(
