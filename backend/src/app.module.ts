@@ -42,7 +42,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
       {
         name: 'default', //detalt service have 100 request per minutes
         ttl: 60_000, // this is 60s yessir
-        limit: 100, // max number of requests
+        limit: 300, // max number of requests
       },
       {
         name: 'auth', //auth service have 5 request per minute

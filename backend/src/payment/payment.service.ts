@@ -121,7 +121,10 @@ export class PaymentService {
     const session = await this.stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: lineItems,
-      success_url: `${frontendUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      // orderId lets the return page confirm this specific order. It is only a
+      // pointer: GET /order/:id re-checks ownership, and the signed webhook is
+      // what actually marks the order paid.
+      success_url: `${frontendUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&orderId=${order.id}`,
       cancel_url: `${frontendUrl}/checkout/cancel`,
       // Binds the webhook event back to our order without trusting the client.
       metadata: { orderId: order.id, userId: order.userId },
