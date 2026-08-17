@@ -53,10 +53,8 @@ function buildRequestHeaders(request: NextRequest, accessToken: string | undefin
     if (value) headers.set(name, value);
   }
 
-  // Only meaningful once the API is configured to trust this proxy; without it
-  // every user looks like one IP to the API's rate limiter.
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) headers.set("x-forwarded-for", forwardedFor);
+  // The caller's IP is attached by upstreamFetch, which every BFF -> API call
+  // goes through, so the auth routes get it too rather than only this proxy.
 
   if (accessToken) headers.set("authorization", `Bearer ${accessToken}`);
 
