@@ -48,3 +48,29 @@ export function getCsrfSecret(): string {
 
   return secret;
 }
+
+const MIN_PROXY_SECRET_LENGTH = 32;
+
+/**
+ * Shared secret that lets the API believe the client IP this proxy reports, so
+ * rate limiting is per visitor instead of per BFF instance.
+ *
+ * Absence is tolerated — the API then buckets by socket address, which is more
+ * restrictive, not less. A *weak* value is not tolerated in production, because
+ * a guessable secret lets anyone spoof their IP and sidesteps the limiter
+ * entirely, which is worse than not having the mechanism at all.
+ */
+export function getInternalProxySecret(): string | undefined {
+  const secret = process.env.INTERNAL_PROXY_SECRET;
+
+  if (!secret) return undefined;
+
+  if (isProduction && secret.length < MIN_PROXY_SECRET_LENGTH) {
+    throw new Error(
+      `INTERNAL_PROXY_SECRET must be at least ${MIN_PROXY_SECRET_LENGTH} characters in ` +
+        "production, or left unset. Generate one with: openssl rand -base64 32",
+    );
+  }
+
+  return secret;
+}
