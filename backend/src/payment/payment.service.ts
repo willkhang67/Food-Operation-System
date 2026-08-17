@@ -66,7 +66,7 @@ export class PaymentService {
       where: { id: orderId },
       relations: { items: true },
     });
-    
+
     if (!order) {
       throw new NotFoundException(`Order with id ${orderId} not found`);
     }

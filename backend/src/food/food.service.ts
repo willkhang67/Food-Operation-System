@@ -1,6 +1,6 @@
 import {
-  Injectable, 
-  NotFoundException, 
+  Injectable,
+  NotFoundException,
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
@@ -64,7 +64,7 @@ export class FoodService {
   }
 
   private async resolveCategories(categoryIds: string[]): Promise<Category[]> {
-    const categories = await this.categoryRepo.findBy({ 
+    const categories = await this.categoryRepo.findBy({
       id: In(categoryIds),
       status: 1,
     });
@@ -74,8 +74,6 @@ export class FoodService {
     }
     return categories;
   }
-
-
 
   private async findActiveByName(name: string): Promise<Food | null> {
     return this.foodRepo.findOneBy({ name, status: 1 });
@@ -139,7 +137,7 @@ export class FoodService {
     return foods.map((f) => this.toResponseDto(f));
   }
 
-    async findOne(id: string): Promise<FoodResponseDto> {
+  async findOne(id: string): Promise<FoodResponseDto> {
     const food = await this.foodRepo.findOne({
       where: { id },
       relations: { categories: true, images: true },
@@ -151,8 +149,7 @@ export class FoodService {
   // Xem lịch sử giá - tra theo name của food
   async getPriceHistory(id: string): Promise<FoodBasicDto[]> {
     const food = await this.foodRepo.findOneBy({ id });
-    if (!food) 
-      throw new NotFoundException(`Food with id ${id} not found`);
+    if (!food) throw new NotFoundException(`Food with id ${id} not found`);
 
     const history = await this.foodRepo.find({
       where: { name: food.name },
@@ -182,15 +179,16 @@ export class FoodService {
 
   // caapj nhật giá mới, tạo record mới, record giá cũ có status = 0
   async updatePrice(
-    name: string, 
-    dto: UpdateFoodPriceDto
+    name: string,
+    dto: UpdateFoodPriceDto,
   ): Promise<FoodBasicDto> {
     const current = await this.foodRepo.findOne({
       where: { name, status: 1 },
       relations: { categories: true },
     });
 
-    if (!current) throw new NotFoundException(`Active food with name ${name} not found`);
+    if (!current)
+      throw new NotFoundException(`Active food with name ${name} not found`);
 
     if (!current) {
       throw new NotFoundException(`Active food not found`);

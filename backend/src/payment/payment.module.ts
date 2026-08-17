@@ -8,10 +8,7 @@ import { PaymentController } from './payment.controller';
 import { StripeProvider } from './stripe/stripe.provider';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Payment, Order]),
-    OrderModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Payment, Order]), OrderModule],
   controllers: [PaymentController],
   providers: [PaymentService, StripeProvider],
   exports: [PaymentService],

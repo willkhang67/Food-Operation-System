@@ -29,7 +29,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ auth: { ttl: 60_000, limit: 5 } })
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
     return this.authService.login(loginDto);
   }
@@ -37,7 +37,7 @@ export class AuthController {
   /** BFF sends refresh JWT as Authorization: Bearer <refresh>. */
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ auth: { ttl: 60_000, limit: 5 } })
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   refresh(
     @Headers('authorization') authorization?: string,
   ): Promise<AuthResponseDto> {

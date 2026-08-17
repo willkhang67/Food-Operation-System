@@ -72,8 +72,7 @@ export class OrderService {
     userId: string,
     role: UserRole,
   ): void {
-    const isStaffOrAdmin =
-      role === UserRole.ADMIN || role === UserRole.STAFF;
+    const isStaffOrAdmin = role === UserRole.ADMIN || role === UserRole.STAFF;
     if (!isStaffOrAdmin && order.userId !== userId) {
       throw new ForbiddenException('You can only access your own orders');
     }
@@ -160,14 +159,14 @@ export class OrderService {
   ): Promise<OrderResponseDto> {
     const order = await this.requireOrderWithItems(id);
     const next = dto.status;
-  
+
     // Staff must not manually set PAID, only Stripe webhook via markAsPaid
     if (next === OrderStatus.PAID) {
       throw new BadRequestException(
         'Paid status can only be set by payment confirmation',
       );
     }
-  
+
     const allowed: Record<OrderStatus, OrderStatus[]> = {
       [OrderStatus.PENDING]: [OrderStatus.CANCELLED],
       [OrderStatus.PAID]: [OrderStatus.PROCESSING, OrderStatus.CANCELLED],
@@ -175,13 +174,13 @@ export class OrderService {
       [OrderStatus.DELIVERED]: [],
       [OrderStatus.CANCELLED]: [],
     };
-  
+
     if (!allowed[order.status]?.includes(next)) {
       throw new BadRequestException(
         `Invalid transition: ${order.status} to ${next}`,
       );
     }
-  
+
     order.status = next;
     const updated = await this.orderRepo.save(order);
     return this.toResponseDto(updated);

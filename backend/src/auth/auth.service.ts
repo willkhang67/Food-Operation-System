@@ -142,9 +142,7 @@ export class AuthService {
     const refreshToken = await this.jwtService.signAsync(refreshPayload, {
       secret: this.refreshSecret,
       expiresIn: this.refreshExpiresIn as
-        | `${number}d`
-        | `${number}h`
-        | `${number}m`,
+        `${number}d` | `${number}h` | `${number}m`,
     });
 
     const decoded = this.jwtService.decode<{ exp: number }>(refreshToken);

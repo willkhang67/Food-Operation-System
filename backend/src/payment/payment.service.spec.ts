@@ -45,9 +45,7 @@ describe('PaymentService', () => {
         {
           provide: ConfigService,
           useValue: {
-            get: jest.fn(
-              (_key: string, defaultValue?: string) => defaultValue,
-            ),
+            get: jest.fn((_key: string, defaultValue?: string) => defaultValue),
           },
         },
       ],

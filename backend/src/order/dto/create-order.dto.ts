@@ -1,9 +1,5 @@
 import { Type } from 'class-transformer';
-import {
-  ArrayMinSize,
-  IsArray,
-  ValidateNested,
-} from 'class-validator';
+import { ArrayMinSize, IsArray, ValidateNested } from 'class-validator';
 import { CreateOrderItemDto } from './create-order-item.dto';
 
 export class CreateOrderDto {
