@@ -62,7 +62,20 @@
   --width-shell-wide: 56rem;
   --width-shell-header: 72rem;
 
+  /* Space the fixed customer tab bar occupies at the bottom of the viewport.
+     The cart bar sits directly above it and page content pads past both, so
+     this is the one place that number is allowed to live. */
+  --height-customer-nav: 5.5rem;
+
   --transition-base: 150ms ease;
+}
+
+/* Mirrors $breakpoint-md in src/styles/_breakpoints.scss. Above it the customer
+   tab bar becomes a static top bar, so nothing is reserved at the bottom. */
+@media (min-width: 48rem) {
+  :root {
+    --height-customer-nav: 0rem;
+  }
 }
 
 body {
