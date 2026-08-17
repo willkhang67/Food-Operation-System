@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { api, isAbortError, isApiError, menuApi } from "@/lib/api";
+import { adminApi, isAbortError, isApiError, menuApi } from "@/lib/api";
 import { useAuth } from "@/providers/AuthProvider";
 import type { Food } from "@/types";
 import StatusSwitch from "@/components/admin/StatusSwitch";
@@ -45,7 +45,7 @@ export default function AdminFoodPage() {
       setIsLoading(true);
       setError(null);
       try {
-        // TODO: đổi sang api.getAdminFoods() khi cần thấy cả món hidden
+        // TODO: đổi sang adminApi.getAllFoods() khi cần thấy cả món hidden
         // trực tiếp từ /food/all thay vì lọc client-side như hiện tại.
         const data = await menuApi.getFoods({ signal: controller.signal });
         setFoods(data);
@@ -74,7 +74,7 @@ export default function AdminFoodPage() {
     );
 
     try {
-      await api.toggleFoodAvailability(foodId);
+      await adminApi.toggleFoodAvailability(foodId);
     } catch (err) {
       setFoods(previousFoods);
       setError(isApiError(err) ? err.message : "Failed to update availability.");
