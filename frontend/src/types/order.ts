@@ -4,6 +4,12 @@ export type OrderStatus = "pending" | "paid" | "processing" | "delivered" | "can
 /** Mirrors the API's PaymentStatus enum. */
 export type PaymentStatus = "pending" | "paid" | "failed" | "cancelled" | "expired";
 
+/** Request body line for POST /order. Mirrors the API's CreateOrderItemDto. */
+export interface CreateOrderItem {
+  foodId: string;
+  quantity: number;
+}
+
 export interface OrderItem {
   id: string;
   foodId: string;
