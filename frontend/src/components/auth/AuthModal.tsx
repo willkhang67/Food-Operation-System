@@ -17,21 +17,15 @@ interface AuthModalProps {
 export default function AuthModal({ mode, onClose, onSwitchMode }: AuthModalProps) {
   const { login, register } = useAuth();
 
-  const [mounted, setMounted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    setShowPassword(false);
-    setShowConfirmPassword(false);
-    setError(null);
-  }, [mode]);
+  // No mount gate is needed: the provider only renders this dialog once a
+  // visitor has opened it, so `document` exists by the time createPortal runs.
+  // Switching between Log In and Sign Up remounts the component — see the `key`
+  // in AuthDialogProvider — which is what clears the fields and the error.
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -47,8 +41,6 @@ export default function AuthModal({ mode, onClose, onSwitchMode }: AuthModalProp
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose]);
-
-  if (!mounted) return null;
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
