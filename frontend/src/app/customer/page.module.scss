@@ -2,7 +2,9 @@
   width: 100%;
   max-width: 1400px;
   margin-inline: auto;
-  padding-bottom: 6rem;
+  /* Clears the fixed tab bar plus the cart bar floating above it. Reserved
+     unconditionally so the page does not shift when the cart first appears. */
+  padding-bottom: calc(var(--height-customer-nav) + 5rem);
 }
 
 .storeHeader {
