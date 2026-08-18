@@ -1,0 +1,118 @@
+@use "../../../styles/breakpoints" as bp;
+
+.page {
+  display: grid;
+  gap: 0.875rem;
+  width: 100%;
+  max-width: var(--width-shell-mobile);
+  margin-inline: auto;
+  padding: 1rem;
+  /* Clears the fixed tab bar and the cart bar that floats above it. */
+  padding-bottom: calc(var(--height-customer-nav) + 5rem);
+
+  @include bp.md {
+    padding-top: 2rem;
+  }
+}
+
+.header {
+  margin-bottom: 0.25rem;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.subtitle {
+  margin: 0.125rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.card {
+  display: grid;
+  gap: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  padding: 1rem;
+}
+
+.note {
+  margin: 0;
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--color-text-subtle);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.sectionText {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.primaryLink {
+  justify-self: start;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-action);
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-action-text);
+  text-decoration: none;
+  transition: background-color var(--transition-base);
+
+  &:hover {
+    background-color: var(--color-action-hover);
+  }
+}
+
+.error {
+  margin: 0;
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-danger-surface);
+  padding: 0.75rem 1rem;
+  font-size: 0.8125rem;
+  color: var(--color-danger);
+}
+
+.signOut {
+  justify-self: start;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background-color: transparent;
+  padding: 0.5rem 1.25rem;
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base);
+
+  &:enabled:hover {
+    background-color: var(--color-surface-muted);
+  }
+
+  &:disabled {
+    color: var(--color-text-subtle);
+    cursor: not-allowed;
+  }
+}
