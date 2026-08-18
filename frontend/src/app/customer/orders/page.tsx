@@ -1,17 +1,12 @@
-"use client";
+import type { Metadata } from "next";
+import MyOrders from "./MyOrders";
 
-import RouteGuard from "@/components/auth/RouteGuard";
-import PlaceholderPage from "@/components/common/PlaceholderPage";
+export const metadata: Metadata = {
+  title: "Your orders",
+  // The page lists order references and totals; it has no business in an index.
+  robots: { index: false, follow: false },
+};
 
-/** Client page so refused visitors never receive the orders shell in the RSC payload. */
 export default function OrdersPage() {
-  return (
-    <RouteGuard>
-      <PlaceholderPage
-        title="Your orders"
-        description="Your order history will appear here."
-        width="mobile"
-      />
-    </RouteGuard>
-  );
+  return <MyOrders />;
 }
