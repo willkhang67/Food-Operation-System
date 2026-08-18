@@ -1,0 +1,137 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  padding: 1rem;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.badge {
+  border-radius: var(--radius-pill);
+  padding: 0.1875rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.waiting {
+  border: 1px solid var(--color-border-strong);
+  background-color: var(--color-surface-muted);
+  color: var(--color-text-muted);
+}
+
+.positive {
+  border: 1px solid var(--color-action);
+  background-color: var(--color-action);
+  color: var(--color-action-text);
+}
+
+.active {
+  border: 1px solid var(--color-action);
+  background-color: transparent;
+  color: var(--color-text);
+}
+
+.settled {
+  border: 1px solid var(--color-border);
+  background-color: transparent;
+  color: var(--color-text-subtle);
+}
+
+.cancelled {
+  border: 1px solid var(--color-danger-border);
+  background-color: var(--color-danger-surface);
+  color: var(--color-danger);
+}
+
+.placedAt {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.detail {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.items {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-text);
+  // Long orders must not push the total and the pay button out of reach.
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.625rem;
+}
+
+.count {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.total {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+.reference {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.6875rem;
+  color: var(--color-text-subtle);
+  overflow-wrap: anywhere;
+}
+
+.pay {
+  margin-top: 0.25rem;
+  border: 1px solid var(--color-action);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-action);
+  padding: 0.625rem 1.25rem;
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-action-text);
+  cursor: pointer;
+  transition: background-color var(--transition-base);
+
+  &:enabled:hover {
+    background-color: var(--color-action-hover);
+  }
+
+  &:disabled {
+    border-color: var(--color-surface-disabled);
+    background-color: var(--color-surface-disabled);
+    color: var(--color-text-subtle);
+    cursor: not-allowed;
+  }
+}
