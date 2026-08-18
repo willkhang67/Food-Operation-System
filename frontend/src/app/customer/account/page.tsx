@@ -1,17 +1,12 @@
-"use client";
+import type { Metadata } from "next";
+import MyAccount from "./MyAccount";
 
-import RouteGuard from "@/components/auth/RouteGuard";
-import PlaceholderPage from "@/components/common/PlaceholderPage";
+export const metadata: Metadata = {
+  title: "Account",
+  // The page shows a customer's contact details; it has no business in an index.
+  robots: { index: false, follow: false },
+};
 
-/** Client page so refused visitors never receive the account shell in the RSC payload. */
 export default function AccountPage() {
-  return (
-    <RouteGuard>
-      <PlaceholderPage
-        title="Account"
-        description="Your profile and contact details will appear here."
-        width="mobile"
-      />
-    </RouteGuard>
-  );
+  return <MyAccount />;
 }
