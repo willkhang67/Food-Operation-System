@@ -110,7 +110,27 @@
   color: #6b7280;
 }
 
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .editLink {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: #d6332a;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.deleteLink {
   border: none;
   background: transparent;
   padding: 0;

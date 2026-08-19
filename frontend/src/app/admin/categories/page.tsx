@@ -6,6 +6,9 @@ import { cn } from "@/lib/cn";
 import { isAbortError, isApiError, menuApi } from "@/lib/api";
 import { useAuth } from "@/providers/AuthProvider";
 import type { Category } from "@/types";
+import AddCategoryModal from "@/components/admin/Category/AddCategoryModal";
+import EditCategoryModal from "@/components/admin/Category/EditCategoryModal";
+import DeleteCategoryModal from "@/components/admin/Category/DeleteCategoryModal";
 import styles from "./page.module.scss";
 
 export default function AdminCategoriesPage() {
@@ -13,8 +16,27 @@ export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
 
   const isAdmin = user?.role?.toUpperCase() === "ADMIN";
+
+  const loadCategories = async (signal?: AbortSignal) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await menuApi.getCategories({ signal });
+      setCategories(data);
+    } catch (err) {
+      if (isAbortError(err)) return;
+      setError(isApiError(err) ? err.message : "Failed to load categories.");
+    } finally {
+      if (!signal?.aborted) setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (status === "loading") {
@@ -30,26 +52,21 @@ export default function AdminCategoriesPage() {
     }
 
     const controller = new AbortController();
-
-    async function load() {
-      setIsLoading(true);
-      setError(null);
-      try {
-        // TODO: đổi sang endpoint admin (/category/all) khi cần thấy cả
-        // category đang inactive, chưa chỉ active như hiện tại.
-        const data = await menuApi.getCategories({ signal: controller.signal });
-        setCategories(data);
-      } catch (err) {
-        if (isAbortError(err)) return;
-        setError(isApiError(err) ? err.message : "Failed to load categories.");
-      } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
-      }
-    }
-
-    load();
+    loadCategories(controller.signal);
     return () => controller.abort();
   }, [status, isAdmin]);
+
+  const handleCategoryAdded = () => {
+    loadCategories();
+  };
+
+  const handleCategoryUpdated = () => {
+    loadCategories();
+  };
+
+  const handleCategoryDeleted = () => {
+    loadCategories();
+  };
 
   return (
     <div>
@@ -58,7 +75,11 @@ export default function AdminCategoriesPage() {
           <h1 className={styles.title}>Categories</h1>
           <p className={styles.subtitle}>{categories.length} categories</p>
         </div>
-        <button type="button" className={styles.addButton}>
+        <button
+          type="button"
+          className={styles.addButton}
+          onClick={() => setIsAddModalOpen(true)}
+        >
           <Plus size={16} strokeWidth={2.5} />
           Add category
         </button>
@@ -93,24 +114,68 @@ export default function AdminCategoriesPage() {
                   </span>
                 </td>
                 <td>
-                  {/* TODO: mở form/trang edit khi có chức năng chỉnh sửa */}
-                  <button type="button" className={styles.editLink}>
-                    Edit
-                  </button>
+                  <div className={styles.actions}>
+                    <button
+                      type="button"
+                      className={styles.editLink}
+                      onClick={() => {
+                        setEditingCategory(category);
+                        setIsEditModalOpen(true);
+                      }}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      className={styles.deleteLink}
+                      onClick={() => {
+                        setDeletingCategory(category);
+                        setIsDeleteModalOpen(true);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
-
             {categories.length === 0 && (
               <tr>
                 <td colSpan={4} className={styles.emptyRow}>
-                  Chưa có category nào.
+                  Not found any categories
                 </td>
               </tr>
             )}
           </tbody>
         </table>
       )}
+
+      <AddCategoryModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={handleCategoryAdded}
+      />
+
+      <EditCategoryModal
+        isOpen={isEditModalOpen}
+        category={editingCategory}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingCategory(null);
+        }}
+        onSuccess={handleCategoryUpdated}
+      />
+
+      <DeleteCategoryModal
+        isOpen={isDeleteModalOpen}
+        category={deletingCategory}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDeletingCategory(null);
+        }}
+        onSuccess={handleCategoryDeleted}
+      />
     </div>
   );
 }
