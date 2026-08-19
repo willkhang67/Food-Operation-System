@@ -60,6 +60,8 @@ export class FoodService {
       price: Number(food.price),
       is_available: food.is_available,
       status: food.status,
+      createdAt: food.createdAt,
+      updatedAt: food.updatedAt,
     };
   }
 

@@ -4,4 +4,6 @@ export class FoodBasicDto {
   price!: number;
   is_available!: boolean;
   status!: number;
+  createdAt!: Date;
+  updatedAt!: Date;
 }
