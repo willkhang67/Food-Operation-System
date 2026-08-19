@@ -14,7 +14,7 @@ const NAV_ITEMS = [
 ] as const;
 
 function getDisplayName(user: AuthUser | null): string {
-  if (!user) return "Chưa đăng nhập";
+  if (!user) return "Not logged in";
   return user.name ?? user.email ?? "Admin";
 }
 
@@ -57,7 +57,10 @@ export default function AdminSidebar() {
       <div className={styles.loggedInAs}>
         <span className={styles.loggedInAsLabel}>LOGGED IN AS</span>
         <div className={styles.loggedInAsRow}>
-          <span className={styles.loggedInAsValue} title={getDisplayName(user)}>
+          <span
+            className={styles.loggedInAsValue}
+            title={getDisplayName(user)}
+          >
             {getDisplayName(user)}
           </span>
           {user && (
@@ -65,8 +68,8 @@ export default function AdminSidebar() {
               type="button"
               className={styles.logoutButton}
               onClick={handleLogout}
-              aria-label="Đăng xuất"
-              title="Đăng xuất"
+              aria-label="Log out"
+              title="Log out"
             >
               <LogOut size={14} />
             </button>
