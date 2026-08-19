@@ -3,6 +3,23 @@ export * from "./auth";
 export * from "./cart";
 export * from "./order";
 
+export interface FoodBasic {
+  id: string;
+  name: string;
+  price: number;
+  is_available: boolean;
+  status: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FoodImage {
+  id: string;
+  url: string;
+  foodId?: string;
+  nextImageId?: string | null;
+}
+
 export interface Category {
   id: string;
   name: string;

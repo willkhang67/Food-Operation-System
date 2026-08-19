@@ -46,6 +46,7 @@ export function isAbortError(error: unknown): boolean {
 
 export interface RequestOptions {
   method?: string;
+  headers?: Record<string, string>;
   body?: unknown;
   signal?: AbortSignal;
 }
