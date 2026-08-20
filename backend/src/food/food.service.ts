@@ -199,7 +199,6 @@ export class FoodService {
       throw new BadRequestException('The price remains unchanged');
     }
 
-    // 1. Lưu lại giá cũ vào history
     const priceHistory = this.foodRepo.create({
       name: current.name,
       description: current.description,
@@ -211,7 +210,6 @@ export class FoodService {
 
     await this.foodRepo.save(priceHistory);
 
-    // 2. Update trực tiếp food đang active
     current.price = dto.price;
 
     const updated = await this.foodRepo.save(current);
