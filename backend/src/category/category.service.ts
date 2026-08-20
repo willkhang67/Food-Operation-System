@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from './entities/category.entity';
+import { Food } from '../food/entities/food.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryResponseDto } from './dto/category-response.dto';
@@ -16,6 +17,8 @@ export class CategoryService {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepo: Repository<Category>,
+    @InjectRepository(Food)
+    private readonly foodRepo: Repository<Food>,
   ) {}
 
   private toResponseDto(category: Category): CategoryResponseDto {
@@ -118,6 +121,23 @@ export class CategoryService {
     if (!category) {
       throw new NotFoundException(`Category with id ${id} not found`);
     }
+
+    const activeFoods = await this.foodRepo
+    .createQueryBuilder('food')
+    .innerJoin('food.categories', 'category')
+    .where('category.id = :categoryId', {
+      categoryId: id,
+    })
+    .andWhere('food.status = :status', {
+      status: 1,
+    })
+    .getCount();
+
+  if (activeFoods > 0) {
+    throw new ConflictException(
+      'Cannot delete this category. It is still being used by one or more active foods.',
+    );
+  }
 
     category.status = 0;
     const updated = await this.categoryRepo.save(category);
