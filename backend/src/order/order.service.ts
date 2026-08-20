@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -18,6 +19,8 @@ import { OrderStatus } from './enums/order-status.enum';
 
 @Injectable()
 export class OrderService {
+  private readonly logger = new Logger(OrderService.name);
+
   constructor(
     @InjectRepository(Order)
     private readonly orderRepo: Repository<Order>,
@@ -118,7 +121,10 @@ export class OrderService {
       items,
     });
 
-    const saved = await this.orderRepo.save(order); //save to db
+    const saved = await this.orderRepo.save(order);
+    this.logger.log(
+      `Order created orderId=${saved.id} userId=${userId} items=${saved.totalItems}`,
+    );
     return this.toResponseDto(saved);
   }
 
@@ -181,8 +187,12 @@ export class OrderService {
       );
     }
 
+    const previous = order.status;
     order.status = next;
     const updated = await this.orderRepo.save(order);
+    this.logger.log(
+      `Order status updated orderId=${id} from=${previous} to=${next}`,
+    );
     return this.toResponseDto(updated);
   }
 
@@ -201,6 +211,7 @@ export class OrderService {
 
     order.status = OrderStatus.CANCELLED;
     const updated = await this.orderRepo.save(order);
+    this.logger.log(`Order cancelled orderId=${id} userId=${userId}`);
     return this.toResponseDto(updated);
   }
 
@@ -210,6 +221,7 @@ export class OrderService {
   async markAsPaid(orderId: string): Promise<OrderResponseDto> {
     const order = await this.requireOrderWithItems(orderId);
     if (order.status === OrderStatus.PAID) {
+      this.logger.debug(`markAsPaid idempotent skip orderId=${orderId}`);
       return this.toResponseDto(order);
     }
     if (order.status === OrderStatus.CANCELLED) {
@@ -222,6 +234,7 @@ export class OrderService {
     }
     order.status = OrderStatus.PAID;
     const updated = await this.orderRepo.save(order);
+    this.logger.log(`Order marked paid orderId=${orderId}`);
     return this.toResponseDto(updated);
   }
 
