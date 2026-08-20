@@ -172,6 +172,22 @@ Passing it in the URL is safe: `GET /order/:id` is guarded and checks ownership,
 so a forged id returns 403 or 404 rather than someone else's order. It is a
 pointer, not proof; the signed webhook is still what marks the order paid.
 
+### Where the return pages send people
+
+Both return pages hand off to `/customer/orders`, which reads `GET /order/me` —
+scoped to the caller's own id by the API, so there is no id to tamper with.
+
+That page is what makes webhook lag survivable rather than a dead end. The
+success page gives up politely after 20 seconds, and a customer who lands on
+their order list while an order still reads as unpaid gets a Refresh control and
+a line telling them confirmation can take a few seconds. Anything still unpaid
+offers **Pay now**, which starts a fresh Stripe session for that same order
+instead of asking them to rebuild a cart the tab may no longer hold.
+
+The list is a snapshot, so `Pay now` treats a 409, a 400, or a 404 from
+`POST /payment/checkout/:id` as "the API has moved on" and re-reads rather than
+arguing with it.
+
 ## Still outstanding
 
 - **Refresh grace window (API).** Rotation revokes the presented token
@@ -180,3 +196,21 @@ pointer, not proof; the signed webhook is still what marks the order paid.
   seconds of grace on the API side would remove the last sharp edge.
 - **Session-scoped cart.** The cart lives in `sessionStorage`, so it does not
   follow a customer between devices or survive closing the tab.
+- **No auto-refresh on the order list.** Confirmation is a Refresh press, not a
+  poll. Deliberate for now: polling every open order list costs requests on a
+  rate-limited API to save one tap.
+
+### Deliberately out of scope
+
+Chosen deferrals rather than oversights — the customer payment path is shippable
+without them, and each one would widen it without making it more trustworthy:
+
+| Deferred | Why it can wait |
+| --- | --- |
+| Kitchen display / order queue UI | Staff-facing; the API's `GET /order/kitchen` already exists for it |
+| Admin CRUD and sell-out toggles | Admin-facing; the customer path only reads availability |
+| Delivery, item modifiers, tips | Each changes what an order *is*, so it changes pricing and the DTO |
+| Guest checkout | Orders are owned by a user id; anonymous ownership is a data-model decision |
+| Server-side cart | Needs endpoints and a merge story for two devices; `sessionStorage` covers one tab |
+| Order cancellation from the UI | `PATCH /order/:id/cancel` exists and is owner-checked, but Pay now already clears the dead end |
+| Retiring the `RoleNav` demo chrome | A real product smell, but changing navigation mid-payment-path buys no confidence in the payment path |

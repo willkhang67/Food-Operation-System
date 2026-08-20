@@ -18,15 +18,15 @@ interface UpdateImageModalProps {
   onSuccess?: () => void;
 }
 
-export default function UpdateImageModal({
-  isOpen,
-  food,
-  onClose,
-  onSuccess,
-}: UpdateImageModalProps) {
+interface UpdateImageFormProps {
+  food: Food;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+function UpdateImageForm({ food, onClose, onSuccess }: UpdateImageFormProps) {
   const [images, setImages] = useState<ImageItem[]>([]);
   const [newImageUrl, setNewImageUrl] = useState("");
-
   const [originalImages, setOriginalImages] = useState<ImageItem[]>([]);
 
   const [loading, setLoading] = useState(false);
@@ -34,12 +34,9 @@ export default function UpdateImageModal({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isOpen || !food) return;
+    const controller = new AbortController();
 
-    setError(null);
-    setNewImageUrl("");
-
-    const loadImages = async () => {
+    async function loadImages() {
       setLoadingImages(true);
 
       try {
@@ -50,21 +47,23 @@ export default function UpdateImageModal({
           url: image.url,
         }));
 
-        setImages(mapped);
-        setOriginalImages(mapped);
+        if (!controller.signal.aborted) {
+          setImages(mapped);
+          setOriginalImages(mapped);
+        }
       } catch (err) {
-        setError(
-          isApiError(err)
-            ? err.message
-            : "Unable to load images."
-        );
+        if (!controller.signal.aborted) {
+          setError(isApiError(err) ? err.message : "Unable to load images.");
+        }
       } finally {
-        setLoadingImages(false);
+        if (!controller.signal.aborted) setLoadingImages(false);
       }
-    };
+    }
 
-    loadImages();
-  }, [isOpen, food]);
+    void loadImages();
+
+    return () => controller.abort();
+  }, [food.id]);
 
   const handleAddImage = () => {
     const url = newImageUrl.trim();
@@ -95,69 +94,32 @@ export default function UpdateImageModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!food) return;
-
     setError(null);
     setLoading(true);
 
     try {
-      /*
-       * 1. Những ảnh bị xóa
-       */
       const deletedImages = originalImages.filter(
-        (original) =>
-          !images.some((current) => current.id === original.id)
+        (original) => !images.some((current) => current.id === original.id),
       );
 
-      /*
-       * 2. Những ảnh mới được thêm
-       */
-      const addedImages = images.filter(
-        (image) => image.id.startsWith("new-")
-      );
+      const addedImages = images.filter((image) => image.id.startsWith("new-"));
 
-      /*
-       * 3. Delete ảnh cũ
-       */
       for (const image of deletedImages) {
-        await adminApi.deleteFoodImage(
-          food.id,
-          image.id
-        );
+        await adminApi.deleteFoodImage(food.id, image.id);
       }
 
-      /*
-       * 4. Add ảnh mới
-       */
       for (const image of addedImages) {
-        await adminApi.addFoodImage(
-          food.id,
-          image.url
-        );
+        await adminApi.addFoodImage(food.id, image.url);
       }
 
       onSuccess?.();
       onClose();
     } catch (err) {
-      setError(
-        isApiError(err)
-          ? err.message
-          : "Unable to update images."
-      );
+      setError(isApiError(err) ? err.message : "Unable to update images.");
     } finally {
       setLoading(false);
     }
   };
-
-  const handleClose = () => {
-    setImages([]);
-    setOriginalImages([]);
-    setNewImageUrl("");
-    setError(null);
-    onClose();
-  };
-
-  if (!isOpen || !food) return null;
 
   return (
     <div className={styles.overlay}>
@@ -168,7 +130,7 @@ export default function UpdateImageModal({
           <button
             type="button"
             className={styles.closeButton}
-            onClick={handleClose}
+            onClick={onClose}
             disabled={loading}
           >
             <X size={24} strokeWidth={2} />
@@ -176,7 +138,6 @@ export default function UpdateImageModal({
         </div>
 
         <form onSubmit={handleSubmit}>
-          {/* Add image */}
           <div className={styles.field}>
             <label>Add Image (URL)</label>
 
@@ -184,9 +145,7 @@ export default function UpdateImageModal({
               <input
                 type="url"
                 value={newImageUrl}
-                onChange={(e) =>
-                  setNewImageUrl(e.target.value)
-                }
+                onChange={(e) => setNewImageUrl(e.target.value)}
                 placeholder="https://example.com/image.jpg"
                 disabled={loading}
               />
@@ -202,39 +161,24 @@ export default function UpdateImageModal({
             </div>
           </div>
 
-          {/* Images */}
           <div className={styles.field}>
-            <label>
-              Images ({images.length})
-            </label>
+            <label>Images ({images.length})</label>
 
             {loadingImages ? (
-              <p className={styles.muted}>
-                Loading images...
-              </p>
+              <p className={styles.muted}>Loading images...</p>
             ) : images.length === 0 ? (
-              <p className={styles.muted}>
-                No images available.
-              </p>
+              <p className={styles.muted}>No images available.</p>
             ) : (
               <div className={styles.imagePreviewList}>
                 {images.map((image) => (
-                  <div
-                    key={image.id}
-                    className={styles.imagePreviewItem}
-                  >
-                    <img
-                      src={image.url}
-                      alt="Food"
-                      className={styles.imagePreview}
-                    />
+                  <div key={image.id} className={styles.imagePreviewItem}>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- previews use arbitrary admin-supplied URLs */}
+                    <img src={image.url} alt="Food" className={styles.imagePreview} />
 
                     <button
                       type="button"
                       className={styles.removeImageBtn}
-                      onClick={() =>
-                        handleRemoveImage(image.id)
-                      }
+                      onClick={() => handleRemoveImage(image.id)}
                       disabled={loading}
                     >
                       ×
@@ -245,27 +189,14 @@ export default function UpdateImageModal({
             )}
           </div>
 
-          {error && (
-            <p className={styles.error}>
-              {error}
-            </p>
-          )}
+          {error && <p className={styles.error}>{error}</p>}
 
           <div className={styles.actions}>
-            <button
-              type="button"
-              className={styles.cancelBtn}
-              onClick={handleClose}
-              disabled={loading}
-            >
+            <button type="button" className={styles.cancelBtn} onClick={onClose} disabled={loading}>
               Cancel
             </button>
 
-            <button
-              type="submit"
-              className={styles.submitBtn}
-              disabled={loading}
-            >
+            <button type="submit" className={styles.submitBtn} disabled={loading}>
               {loading ? "Saving..." : "Save"}
             </button>
           </div>
@@ -273,4 +204,15 @@ export default function UpdateImageModal({
       </div>
     </div>
   );
+}
+
+export default function UpdateImageModal({
+  isOpen,
+  food,
+  onClose,
+  onSuccess,
+}: UpdateImageModalProps) {
+  if (!isOpen || !food) return null;
+
+  return <UpdateImageForm key={food.id} food={food} onClose={onClose} onSuccess={onSuccess} />;
 }
