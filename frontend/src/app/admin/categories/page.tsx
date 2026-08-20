@@ -23,6 +23,11 @@ export default function AdminCategoriesPage() {
 const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
 
   const isAdmin = user?.role?.toUpperCase() === "ADMIN";
+  const authBlocked =
+    status !== "loading" && (status !== "authenticated" || !isAdmin);
+  const authBlockedMessage = authBlocked
+    ? "You need to log in with an Admin account"
+    : null;
 
   const loadCategories = async (signal?: AbortSignal) => {
     setIsLoading(true);
@@ -39,22 +44,31 @@ const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
   };
 
   useEffect(() => {
-    if (status === "loading") {
-      setIsLoading(true);
-      return;
-    }
-
-    if (status !== "authenticated" || !isAdmin) {
-      setCategories([]);
-      setError("You need to log in with an Admin account");
-      setIsLoading(false);
-      return;
-    }
+    if (status === "loading" || authBlocked) return;
 
     const controller = new AbortController();
-    loadCategories(controller.signal);
+
+    async function load() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await menuApi.getCategories({ signal: controller.signal });
+        setCategories(data);
+      } catch (err) {
+        if (isAbortError(err)) return;
+        setError(isApiError(err) ? err.message : "Failed to load categories.");
+      } finally {
+        if (!controller.signal.aborted) setIsLoading(false);
+      }
+    }
+
+    void load();
+
     return () => controller.abort();
-  }, [status, isAdmin]);
+  }, [status, isAdmin, authBlocked]);
+
+  const showLoading = status === "loading" || isLoading;
+  const displayError = authBlockedMessage ?? error;
 
   const handleCategoryAdded = () => {
     loadCategories();
@@ -85,10 +99,12 @@ const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
         </button>
       </div>
 
-      {isLoading && <p className={styles.stateText}>Loading…</p>}
-      {error && <p className={cn(styles.stateText, styles.stateError)}>{error}</p>}
+      {showLoading && <p className={styles.stateText}>Loading…</p>}
+      {displayError && (
+        <p className={cn(styles.stateText, styles.stateError)}>{displayError}</p>
+      )}
 
-      {!isLoading && !error && (
+      {!showLoading && !displayError && (
         <table className={styles.table}>
           <thead>
             <tr>
