@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CategoryModule } from './category/category.module';
@@ -14,10 +15,15 @@ import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ProxyAwareThrottlerGuard } from './common/guards/proxy-aware-throttler.guard';
+import { createPinoHttpOptions } from './common/logging/pino-http.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    // Register once in the root module only — a second import double-logs every request.
+    LoggerModule.forRoot({
+      pinoHttp: createPinoHttpOptions(),
+    }),
     CryptoModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
