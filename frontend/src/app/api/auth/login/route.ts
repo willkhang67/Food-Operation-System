@@ -8,6 +8,7 @@ import {
   jsonResponse,
   upstreamErrorResponse,
 } from "@/server/http/responses";
+import { withRequestContext } from "@/server/logging/with-request-context";
 import type { SessionResponse } from "@/types";
 
 /**
@@ -15,34 +16,36 @@ import type { SessionResponse } from "@/types";
  * could sign a visitor into an account the attacker controls, and any card they
  * then save would belong to the attacker.
  */
-export const POST = withCsrfProtection(async (request: Request): Promise<Response> => {
-  const body = await readJsonBody(request);
+export const POST = withRequestContext(
+  withCsrfProtection(async (request: Request): Promise<Response> => {
+    const body = await readJsonBody(request);
 
-  if (!body) {
-    return errorResponse(400, ErrorCode.ValidationError, "Request body must be a JSON object.");
-  }
+    if (!body) {
+      return errorResponse(400, ErrorCode.ValidationError, "Request body must be a JSON object.");
+    }
 
-  const email = readString(body, "email");
-  // Read raw: trimming a password would silently change the credential.
-  const password = typeof body.password === "string" ? body.password : "";
+    const email = readString(body, "email");
+    // Read raw: trimming a password would silently change the credential.
+    const password = typeof body.password === "string" ? body.password : "";
 
-  if (!email || !password) {
-    return errorResponse(400, ErrorCode.ValidationError, "Email and password are required.");
-  }
+    if (!email || !password) {
+      return errorResponse(400, ErrorCode.ValidationError, "Email and password are required.");
+    }
 
-  const result = await loginUpstream({ email, password });
+    const result = await loginUpstream({ email, password });
 
-  if (!result.ok) {
-    return upstreamErrorResponse(result.status, result.payload, {
-      unauthorizedCode: ErrorCode.InvalidCredentials,
-    });
-  }
+    if (!result.ok) {
+      return upstreamErrorResponse(result.status, result.payload, {
+        unauthorizedCode: ErrorCode.InvalidCredentials,
+      });
+    }
 
-  const user = await establishSession(result.data);
+    const user = await establishSession(result.data);
 
-  // New session, new token: a value that was observable before sign-in must not
-  // stay valid for requests made as the signed-in user.
-  await rotateCsrfToken();
+    // New session, new token: a value that was observable before sign-in must not
+    // stay valid for requests made as the signed-in user.
+    await rotateCsrfToken();
 
-  return jsonResponse<SessionResponse>({ user });
-});
+    return jsonResponse<SessionResponse>({ user });
+  }),
+);

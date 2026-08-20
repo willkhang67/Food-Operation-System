@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { withCsrfProtection } from "@/server/http/csrf";
 import { proxyToApi } from "@/server/http/proxy";
+import { withRequestContext } from "@/server/logging/with-request-context";
 
 /** Explicit routes such as /api/auth/login take precedence over this catch-all. */
 interface ProxyContext {
@@ -16,8 +17,10 @@ async function handle(request: NextRequest, context: ProxyContext): Promise<Resp
  * Every method goes through the same guard; it is a no-op for reads. That way a
  * new mutating endpoint on the API is protected the moment it exists, instead
  * of waiting for someone to remember to add it to a list here.
+ *
+ * Request context wraps CSRF so rejected writes still carry x-request-id.
  */
-const guarded = withCsrfProtection(handle);
+const guarded = withRequestContext(withCsrfProtection(handle));
 
 export const GET = guarded;
 export const HEAD = guarded;

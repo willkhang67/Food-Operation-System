@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
-import { cn } from "@/lib/cn";
 import { adminApi, isApiError } from "@/lib/api";
 import styles from "./AddCategoryModal.module.scss";
 

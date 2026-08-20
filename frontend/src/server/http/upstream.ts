@@ -2,6 +2,8 @@ import "server-only";
 
 import { headers } from "next/headers";
 import { getApiUrl, getInternalProxySecret, getUpstreamTimeoutMs } from "../env";
+import { bffLogger } from "../logging/logger";
+import { getRequestId, REQUEST_ID_HEADER } from "../logging/request-id";
 
 /** Synthetic status for "the request never reached the API" (DNS, timeout, cold start). */
 export const NETWORK_ERROR_STATUS = 0;
@@ -54,6 +56,9 @@ function clientIp(incoming: Headers): string | undefined {
 async function callerHeaders(): Promise<Record<string, string>> {
   const attached: Record<string, string> = {};
 
+  const requestId = getRequestId();
+  if (requestId) attached[REQUEST_ID_HEADER] = requestId;
+
   let incoming: Headers;
   try {
     incoming = await headers();
@@ -86,6 +91,8 @@ export async function upstreamFetch(
   init: RequestInit = {},
 ): Promise<Response | null> {
   const outgoing = new Headers(init.headers);
+  const method = init.method ?? "GET";
+  const started = Date.now();
 
   // Applied last so a caller cannot present its own idea of who the client is.
   for (const [name, value] of Object.entries(await callerHeaders())) {
@@ -100,7 +107,14 @@ export async function upstreamFetch(
       signal: AbortSignal.timeout(getUpstreamTimeoutMs()),
     });
   } catch (error) {
-    console.error(`[bff] upstream request failed: ${init.method ?? "GET"} ${path}`, error);
+    const name = error instanceof Error ? error.name : "Error";
+    // Do not log error.message — fetch sometimes embeds the full URL with secrets.
+    bffLogger.error("upstream request failed", {
+      method,
+      path,
+      errorName: name,
+      durationMs: Date.now() - started,
+    });
     return null;
   }
 }

@@ -2,6 +2,7 @@ import "server-only";
 
 import type { AuthUser } from "@/types";
 import { NETWORK_ERROR_STATUS, type UpstreamResult } from "../http/upstream";
+import { bffLogger } from "../logging/logger";
 import {
   logoutUpstream,
   meUpstream,
@@ -92,11 +93,13 @@ async function rotateTokens(): Promise<RotationOutcome> {
 
   // A cold-starting or failing API must not sign users out.
   if (isTransportFailure(result.status)) {
+    bffLogger.warn("session refresh unavailable", { status: result.status });
     return { status: "unavailable" };
   }
 
   // The only case where the session is really over: the API rejected the
   // refresh token as expired, revoked, or replayed.
+  bffLogger.info("session cleared after refresh rejection", { status: result.status });
   await clearSessionCookies();
   return { status: "anonymous" };
 }
