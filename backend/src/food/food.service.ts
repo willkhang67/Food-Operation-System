@@ -189,31 +189,32 @@ export class FoodService {
       relations: { categories: true },
     });
 
-    if (!current)
-      throw new NotFoundException(`Active food with name ${name} not found`);
-
     if (!current) {
-      throw new NotFoundException(`Active food not found`);
+      throw new NotFoundException(
+        `Active food with name ${name} not found`,
+      );
     }
 
     if (Number(current.price) === Number(dto.price)) {
       throw new BadRequestException('The price remains unchanged');
     }
 
-    current.status = 0;
-    await this.foodRepo.save(current);
-
-    const newVersion = this.foodRepo.create({
+    const priceHistory = this.foodRepo.create({
       name: current.name,
       description: current.description,
+      price: current.price,
       is_available: current.is_available,
-      price: dto.price,
-      status: 1,
+      status: 0,
       categories: current.categories,
     });
 
-    const saved = await this.foodRepo.save(newVersion);
-    return this.toBasicResponseDto(saved);
+    await this.foodRepo.save(priceHistory);
+
+    current.price = dto.price;
+
+    const updated = await this.foodRepo.save(current);
+
+    return this.toBasicResponseDto(updated);
   }
 
   async toggleAvailability(id: string): Promise<FoodBasicDto> {

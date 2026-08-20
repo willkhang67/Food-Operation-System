@@ -27,6 +27,7 @@ interface UpdateImageFormProps {
 function UpdateImageForm({ food, onClose, onSuccess }: UpdateImageFormProps) {
   const [images, setImages] = useState<ImageItem[]>([]);
   const [newImageUrl, setNewImageUrl] = useState("");
+  const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null);
   const [originalImages, setOriginalImages] = useState<ImageItem[]>([]);
 
   const [loading, setLoading] = useState(false);
@@ -173,7 +174,12 @@ function UpdateImageForm({ food, onClose, onSuccess }: UpdateImageFormProps) {
                 {images.map((image) => (
                   <div key={image.id} className={styles.imagePreviewItem}>
                     {/* eslint-disable-next-line @next/next/no-img-element -- previews use arbitrary admin-supplied URLs */}
-                    <img src={image.url} alt="Food" className={styles.imagePreview} />
+                    <img
+                      src={image.url}
+                      alt="Food"
+                      className={styles.imagePreview}
+                      onClick={() => setSelectedImage(image)}
+                    />
 
                     <button
                       type="button"
@@ -202,6 +208,27 @@ function UpdateImageForm({ food, onClose, onSuccess }: UpdateImageFormProps) {
           </div>
         </form>
       </div>
+
+      {selectedImage && (
+        <div className={styles.imageViewerOverlay} onClick={() => setSelectedImage(null)}>
+          <div className={styles.imageViewer} onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className={styles.imageViewerClose}
+              onClick={() => setSelectedImage(null)}
+            >
+              <X size={24} />
+            </button>
+
+            {/* eslint-disable-next-line @next/next/no-img-element -- previews use arbitrary admin-supplied URLs */}
+            <img
+              src={selectedImage.url}
+              alt="Food preview"
+              className={styles.imageViewerImage}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

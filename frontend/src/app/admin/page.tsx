@@ -22,9 +22,9 @@ type FilterMode = "all" | "available" | "hidden";
 type EditOption = "basic" | "price" | "image";
 
 const FILTERS: { mode: FilterMode; label: string }[] = [
-  { mode: "all", label: "All items" },
   { mode: "available", label: "Available only" },
   { mode: "hidden", label: "Hidden" },
+  { mode: "all", label: "All items" },
 ];
 
 export default function AdminFoodPage() {
