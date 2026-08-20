@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -22,6 +22,7 @@ const TIMING_SAFE_DUMMY_HASH =
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   private readonly expiresIn: string;
   private readonly refreshSecret: string;
   private readonly refreshExpiresIn: string;
@@ -53,10 +54,14 @@ export class AuthService {
     );
 
     if (!user || !passwordValid) {
+      // Never log email/password — pino access logs already carry IP + requestId.
+      this.logger.warn('Login failed');
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    return this.issueTokenPair(user);
+    const auth = await this.issueTokenPair(user);
+    this.logger.log(`Login succeeded userId=${user.id}`);
+    return auth;
   }
 
   /**
@@ -77,6 +82,10 @@ export class AuthService {
       await this.refreshRepo.update(
         { familyId: existing.familyId, revokedAt: IsNull() },
         { revokedAt: new Date() },
+      );
+      // Theft signal: family revoked. userId is safe; the raw token is not logged.
+      this.logger.warn(
+        `Refresh token reuse detected userId=${existing.userId} familyId=${existing.familyId}`,
       );
       throw new UnauthorizedException('Refresh token reuse detected');
     }

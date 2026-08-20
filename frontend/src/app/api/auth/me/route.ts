@@ -1,8 +1,9 @@
 import { resolveSession } from "@/server/auth/session";
 import { ErrorCode, errorResponse, jsonResponse } from "@/server/http/responses";
+import { withRequestContext } from "@/server/logging/with-request-context";
 import type { SessionResponse } from "@/types";
 
-export async function GET(): Promise<Response> {
+export const GET = withRequestContext(async (): Promise<Response> => {
   const outcome = await resolveSession();
 
   switch (outcome.status) {
@@ -17,4 +18,4 @@ export async function GET(): Promise<Response> {
     default:
       return errorResponse(401, ErrorCode.Unauthenticated, "Not signed in.");
   }
-}
+});

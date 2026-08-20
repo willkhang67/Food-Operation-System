@@ -3,6 +3,7 @@ import "server-only";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { getCsrfSecret, isProduction } from "../env";
+import { bffLogger } from "../logging/logger";
 import { ErrorCode, errorResponse } from "./responses";
 
 /**
@@ -130,7 +131,11 @@ function isSameOrigin(request: Request): boolean {
 const REJECTION_MESSAGE = "This request could not be verified. Please reload the page and try again.";
 
 function reject(request: Request, reason: string): Response {
-  console.warn(`[csrf] rejected ${request.method} ${new URL(request.url).pathname}: ${reason}`);
+  bffLogger.warn("csrf rejected", {
+    method: request.method,
+    path: new URL(request.url).pathname,
+    reason,
+  });
   return errorResponse(403, ErrorCode.CsrfRejected, REJECTION_MESSAGE);
 }
 

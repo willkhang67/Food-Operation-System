@@ -189,12 +189,15 @@ export class PaymentService {
 
     switch (event.type) {
       case 'checkout.session.completed':
+        this.logger.log(`Webhook received type=${event.type} id=${event.id}`);
         await this.handleCheckoutCompleted(event.data.object);
         break;
       case 'checkout.session.expired':
+        this.logger.log(`Webhook received type=${event.type} id=${event.id}`);
         await this.handleCheckoutExpired(event.data.object);
         break;
       case 'payment_intent.payment_failed':
+        this.logger.warn(`Webhook received type=${event.type} id=${event.id}`);
         await this.handlePaymentFailed(event.data.object);
         break;
       default:
@@ -219,6 +222,9 @@ export class PaymentService {
 
     // Idempotency: duplicate deliveries must not re-run side effects.
     if (payment.status === PaymentStatus.PAID) {
+      this.logger.debug(
+        `Webhook checkout.session.completed already paid payment=${payment.id}`,
+      );
       return;
     }
 
