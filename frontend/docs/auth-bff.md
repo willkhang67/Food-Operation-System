@@ -214,3 +214,9 @@ without them, and each one would widen it without making it more trustworthy:
 | Server-side cart | Needs endpoints and a merge story for two devices; `sessionStorage` covers one tab |
 | Order cancellation from the UI | `PATCH /order/:id/cancel` exists and is owner-checked, but Pay now already clears the dead end |
 | Retiring the `RoleNav` demo chrome | A real product smell, but changing navigation mid-payment-path buys no confidence in the payment path |
+
+## Logging
+
+Structured logging, `x-request-id` correlation, and the never-log list live in
+[`logging.md`](./logging.md). Read that before adding `console.*` under
+`src/server/` or Nest services.
