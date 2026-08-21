@@ -47,6 +47,12 @@ export class Food {
   @Column({ type: 'int', default: 1 })
   status!: number;
 
+  @Column({
+    name: 'cook_time',
+    type: 'int',
+  })
+  cookTime!: number;
+
   @ManyToMany(() => Category, (category) => category.foods)
   @JoinTable({
     name: 'food_categories',
