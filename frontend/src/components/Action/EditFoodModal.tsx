@@ -16,6 +16,7 @@ interface EditFoodModalProps {
 export default function EditFoodModal({ isOpen, food, onClose, onSuccess }: EditFoodModalProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [cookTime, setCookTime] = useState("");
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [isAvailable, setIsAvailable] = useState(true);
 
@@ -29,6 +30,7 @@ export default function EditFoodModal({ isOpen, food, onClose, onSuccess }: Edit
     if (isOpen && food) {
       setName(food.name);
       setDescription(food.description || "");
+      setCookTime(String(food.cookTime ?? ""));   
       setSelectedCategoryIds(food.categories.map(c => c.id));
       setIsAvailable(food.is_available);
       setError(null);
@@ -71,6 +73,7 @@ export default function EditFoodModal({ isOpen, food, onClose, onSuccess }: Edit
         // price: parseFloat(price),
         categoryIds: selectedCategoryIds,
         isAvailable,
+        cookTime: cookTime ? parseInt(cookTime, 10) : undefined,
         // images: imageUrls.length > 0 ? imageUrls : undefined,
       });
       onSuccess?.();
@@ -111,6 +114,21 @@ export default function EditFoodModal({ isOpen, food, onClose, onSuccess }: Edit
           <div className={styles.field}>
             <label>Description</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} disabled={loading} />
+          </div>
+          <div className={styles.field}>
+            <label htmlFor="cookTime">
+              Cook Time (min) <span className={styles.required}>*</span>
+            </label>
+            <input
+              id="cookTime"
+              type="number"
+              min="1"
+              step="1"
+              value={cookTime}
+              onChange={(e) => setCookTime(e.target.value)}
+              placeholder="e.g. 15"
+              disabled={loading}
+            />
           </div>
           {/* <div className={styles.field}>
             <label>Price (AUD) <span className={styles.required}>*</span></label>
