@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { X } from "lucide-react";
-import { cn } from "@/lib/cn";
 import { adminApi, isApiError } from "@/lib/api";
 import type { Category } from "@/types";
 import styles from "./AddCategoryModal.module.scss";
@@ -14,23 +13,17 @@ interface EditCategoryModalProps {
   onSuccess?: () => void;
 }
 
-export default function EditCategoryModal({
-  isOpen,
-  category,
-  onClose,
-  onSuccess,
-}: EditCategoryModalProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+interface EditCategoryFormProps {
+  category: Category;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+function EditCategoryForm({ category, onClose, onSuccess }: EditCategoryFormProps) {
+  const [name, setName] = useState(category.name);
+  const [description, setDescription] = useState(category.description || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (category) {
-      setName(category.name);
-      setDescription(category.description || "");
-    }
-  }, [category]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,8 +33,6 @@ export default function EditCategoryModal({
       setError("Category name is required");
       return;
     }
-
-    if (!category) return;
 
     setLoading(true);
     try {
@@ -58,21 +49,21 @@ export default function EditCategoryModal({
     }
   };
 
-  if (!isOpen || !category) return null;
-
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
         <div className={styles.header}>
           <h2 className={styles.title}>Edit Category</h2>
-          <button className={styles.closeButton} onClick={onClose} aria-label="Close">
+          <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Close">
             <X size={24} strokeWidth={2} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div className={styles.field}>
-            <label htmlFor="editCategoryName">Category Name <span className={styles.required}>*</span></label>
+            <label htmlFor="editCategoryName">
+              Category Name <span className={styles.required}>*</span>
+            </label>
             <input
               id="editCategoryName"
               type="text"
@@ -109,5 +100,23 @@ export default function EditCategoryModal({
         </form>
       </div>
     </div>
+  );
+}
+
+export default function EditCategoryModal({
+  isOpen,
+  category,
+  onClose,
+  onSuccess,
+}: EditCategoryModalProps) {
+  if (!isOpen || !category) return null;
+
+  return (
+    <EditCategoryForm
+      key={category.id}
+      category={category}
+      onClose={onClose}
+      onSuccess={onSuccess}
+    />
   );
 }

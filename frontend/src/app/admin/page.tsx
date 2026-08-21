@@ -44,19 +44,14 @@ export default function AdminFoodPage() {
   const [deletingFood, setDeletingFood] = useState<Food | null>(null);
 
   const isAdmin = user?.role?.toUpperCase() === "ADMIN";
+  const authBlocked =
+    status !== "loading" && (status !== "authenticated" || !isAdmin);
+  const authBlockedMessage = authBlocked
+    ? "You need to log in with an Admin account"
+    : null;
 
   useEffect(() => {
-    if (status === "loading") {
-      setIsLoading(true);
-      return;
-    }
-
-    if (status !== "authenticated" || !isAdmin) {
-      setFoods([]);
-      setError("You need to log in with an Admin account");
-      setIsLoading(false);
-      return;
-    }
+    if (status === "loading" || authBlocked) return;
 
     const controller = new AbortController();
 
@@ -85,10 +80,13 @@ export default function AdminFoodPage() {
       }
     }
 
-    load();
+    void load();
 
     return () => controller.abort();
-  }, [status, isAdmin]);
+  }, [status, isAdmin, authBlocked]);
+
+  const showLoading = status === "loading" || isLoading;
+  const displayError = authBlockedMessage ?? error;
 
   const visibleFoods = useMemo(() => {
     if (filter === "available") {
@@ -166,14 +164,6 @@ export default function AdminFoodPage() {
     }
   };
 
-  const clearSelectedFood = () => {
-    setSelectedFood(null);
-    setIsEditMenuOpen(false);
-    setIsEditFoodOpen(false);
-    setIsUpdatePriceOpen(false);
-    setIsUpdateImageOpen(false);
-  };
-
   const handleBasicInfoUpdated = async () => {
     await reloadFoods();
   };
@@ -226,24 +216,24 @@ export default function AdminFoodPage() {
         ))}
       </div>
 
-      {isLoading && (
+      {showLoading && (
         <p className={styles.stateText}>
           Loading…
         </p>
       )}
 
-      {error && (
+      {displayError && (
         <p
           className={cn(
             styles.stateText,
             styles.stateError,
           )}
         >
-          {error}
+          {displayError}
         </p>
       )}
 
-      {!isLoading && !error && (
+      {!showLoading && !displayError && (
         <table className={styles.table}>
           <thead>
             <tr>
@@ -262,7 +252,7 @@ export default function AdminFoodPage() {
                   <div className={styles.itemCell}>
                     <div className={styles.thumb}>
                       {food.images?.[0]?.url ? (
-                        
+                        // eslint-disable-next-line @next/next/no-img-element -- admin thumbs use arbitrary Cloudinary URLs
                         <img
                           src={food.images[0].url}
                           alt={food.name}

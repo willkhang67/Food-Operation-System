@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { X } from "lucide-react";
 import { adminApi, isApiError } from "@/lib/api";
 import type { Food, FoodBasic } from "@/types";
@@ -13,7 +13,13 @@ interface UpdatePriceModalProps {
   onSuccess?: () => void;
 }
 
-export default function UpdatePriceModal({isOpen, food, onClose, onSuccess,}: UpdatePriceModalProps) {
+interface UpdatePriceFormProps {
+  food: Food;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+function UpdatePriceForm({ food, onClose, onSuccess }: UpdatePriceFormProps) {
   const [newPrice, setNewPrice] = useState("");
   const [history, setHistory] = useState<FoodBasic[]>([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -21,17 +27,6 @@ export default function UpdatePriceModal({isOpen, food, onClose, onSuccess,}: Up
   const [loading, setLoading] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!isOpen || !food) return;
-
-    setNewPrice("");
-    setHistory([]);
-    setShowHistory(false);
-    setError(null);
-  }, [isOpen, food]);
-
-  if (!isOpen || !food) return null;
 
   const handleShowHistory = async () => {
     if (showHistory) {
@@ -47,11 +42,7 @@ export default function UpdatePriceModal({isOpen, food, onClose, onSuccess,}: Up
       setHistory(data);
       setShowHistory(true);
     } catch (err) {
-      setError(
-        isApiError(err)
-          ? err.message
-          : "Unable to load price history."
-      );
+      setError(isApiError(err) ? err.message : "Unable to load price history.");
     } finally {
       setLoadingHistory(false);
     }
@@ -83,11 +74,7 @@ export default function UpdatePriceModal({isOpen, food, onClose, onSuccess,}: Up
       onSuccess?.();
       onClose();
     } catch (err) {
-      setError(
-        isApiError(err)
-          ? err.message
-          : "Unable to update price."
-      );
+      setError(isApiError(err) ? err.message : "Unable to update price.");
     } finally {
       setLoading(false);
     }
@@ -104,11 +91,7 @@ export default function UpdatePriceModal({isOpen, food, onClose, onSuccess,}: Up
 
   return (
     <div className={styles.overlay}>
-      <div
-        className={`${styles.modal} ${
-          showHistory ? styles.modalWithHistory : ""
-        }`}
-      >
+      <div className={`${styles.modal} ${showHistory ? styles.modalWithHistory : ""}`}>
         <div className={styles.header}>
           <h2 className={styles.title}>Update Price</h2>
 
@@ -122,13 +105,7 @@ export default function UpdatePriceModal({isOpen, food, onClose, onSuccess,}: Up
           </button>
         </div>
 
-        <div
-          className={
-            showHistory
-              ? styles.contentWithHistory
-              : styles.content
-          }
-        >
+        <div className={showHistory ? styles.contentWithHistory : styles.content}>
           {showHistory && (
             <div className={styles.historyPanel}>
               <div className={styles.historyHeader}>
@@ -136,13 +113,9 @@ export default function UpdatePriceModal({isOpen, food, onClose, onSuccess,}: Up
               </div>
 
               {loadingHistory ? (
-                <p className={styles.muted}>
-                  Loading price history...
-                </p>
+                <p className={styles.muted}>Loading price history...</p>
               ) : history.length === 0 ? (
-                <p className={styles.muted}>
-                  No price history available.
-                </p>
+                <p className={styles.muted}>No price history available.</p>
               ) : (
                 <div className={styles.tableWrapper}>
                   <table className={styles.historyTable}>
@@ -158,14 +131,8 @@ export default function UpdatePriceModal({isOpen, food, onClose, onSuccess,}: Up
                       {history.map((item) => (
                         <tr key={item.id}>
                           <td>{item.name}</td>
-
-                          <td>
-                            {formatDate(item.createdAt)}
-                          </td>
-
-                          <td>
-                            ${Number(item.price).toFixed(2)}
-                          </td>
+                          <td>{formatDate(item.createdAt)}</td>
+                          <td>${Number(item.price).toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -175,35 +142,23 @@ export default function UpdatePriceModal({isOpen, food, onClose, onSuccess,}: Up
             </div>
           )}
 
-          <form
-            className={styles.form}
-            onSubmit={handleSubmit}
-          >
+          <form className={styles.form} onSubmit={handleSubmit}>
             <div className={styles.priceRow}>
               <div className={styles.field}>
                 <label>Current Price</label>
-
-                <input
-                  type="text"
-                  value={`$${Number(food.price).toFixed(2)}`}
-                  disabled
-                />
+                <input type="text" value={`$${Number(food.price).toFixed(2)}`} disabled />
               </div>
 
               <div className={styles.field}>
                 <label>
-                  New Price{" "}
-                  <span className={styles.required}>*</span>
+                  New Price <span className={styles.required}>*</span>
                 </label>
-
                 <input
                   type="number"
                   step="0.01"
                   min="0"
                   value={newPrice}
-                  onChange={(e) =>
-                    setNewPrice(e.target.value)
-                  }
+                  onChange={(e) => setNewPrice(e.target.value)}
                   placeholder="0.00"
                   disabled={loading}
                 />
@@ -213,7 +168,7 @@ export default function UpdatePriceModal({isOpen, food, onClose, onSuccess,}: Up
             <button
               type="button"
               className={styles.historyButton}
-              onClick={handleShowHistory}
+              onClick={() => void handleShowHistory()}
               disabled={loading || loadingHistory}
             >
               {loadingHistory
@@ -223,25 +178,13 @@ export default function UpdatePriceModal({isOpen, food, onClose, onSuccess,}: Up
                   : "Price History"}
             </button>
 
-            {error && (
-              <p className={styles.error}>{error}</p>
-            )}
+            {error && <p className={styles.error}>{error}</p>}
 
             <div className={styles.actions}>
-              <button
-                type="button"
-                className={styles.cancelBtn}
-                onClick={onClose}
-                disabled={loading}
-              >
+              <button type="button" className={styles.cancelBtn} onClick={onClose} disabled={loading}>
                 Close
               </button>
-
-              <button
-                type="submit"
-                className={styles.saveBtn}
-                disabled={loading}
-              >
+              <button type="submit" className={styles.saveBtn} disabled={loading}>
                 {loading ? "Saving..." : "Save"}
               </button>
             </div>
@@ -250,4 +193,15 @@ export default function UpdatePriceModal({isOpen, food, onClose, onSuccess,}: Up
       </div>
     </div>
   );
+}
+
+export default function UpdatePriceModal({
+  isOpen,
+  food,
+  onClose,
+  onSuccess,
+}: UpdatePriceModalProps) {
+  if (!isOpen || !food) return null;
+
+  return <UpdatePriceForm key={food.id} food={food} onClose={onClose} onSuccess={onSuccess} />;
 }

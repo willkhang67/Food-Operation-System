@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { adminApi, isApiError, menuApi } from "@/lib/api";
-import type { Food, Category } from "@/types";
+import type { Category, Food } from "@/types";
 import styles from "./EditFoodModal.module.scss";
 
 interface EditFoodModalProps {
@@ -13,12 +13,19 @@ interface EditFoodModalProps {
   onSuccess?: () => void;
 }
 
-export default function EditFoodModal({ isOpen, food, onClose, onSuccess }: EditFoodModalProps) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+interface EditFoodFormProps {
+  food: Food;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+function EditFoodForm({ food, onClose, onSuccess }: EditFoodFormProps) {
+  const [name, setName] = useState(food.name);
+  const [description, setDescription] = useState(food.description || "");
   const [cookTime, setCookTime] = useState("");
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
-  const [isAvailable, setIsAvailable] = useState(true);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState(() =>
+    food.categories.map((category) => category.id),
+  );
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
@@ -27,52 +34,40 @@ export default function EditFoodModal({ isOpen, food, onClose, onSuccess }: Edit
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
-    if (isOpen && food) {
-      setName(food.name);
-      setDescription(food.description || "");
-      setCookTime(String(food.cookTime ?? ""));   
-      setSelectedCategoryIds(food.categories.map(c => c.id));
-      setIsAvailable(food.is_available);
-      setError(null);
-    }
-  }, [isOpen, food]);
+    const controller = new AbortController();
 
-  useEffect(() => {
-    if (isOpen) {
-      const loadCategories = async () => {
-        setLoadingCategories(true);
-        try {
-          const data = await menuApi.getCategories();
-          setCategories(data);
-        } catch {
-          setError("Cannot load categories");
-        } finally {
-          setLoadingCategories(false);
-        }
-      };
-      loadCategories();
+    async function loadCategories() {
+      setLoadingCategories(true);
+      try {
+        const data = await menuApi.getCategories({ signal: controller.signal });
+        setCategories(data);
+      } catch {
+        if (!controller.signal.aborted) setError("Cannot load categories");
+      } finally {
+        if (!controller.signal.aborted) setLoadingCategories(false);
+      }
     }
-  }, [isOpen]);
+
+    void loadCategories();
+
+    return () => controller.abort();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (!name.trim()) return setError("Food name is required");
-    // if (!price || isNaN(parseFloat(price)) || parseFloat(price) <= 0)
-    //   return setError("Price must be a positive number");
     if (selectedCategoryIds.length === 0)
       return setError("Please select at least one category");
-    if (!food) return;
 
     setLoading(true);
     try {
       await adminApi.updateFood(food.id, {
         name: name.trim(),
         description: description.trim() || undefined,
-        // price: parseFloat(price),
         categoryIds: selectedCategoryIds,
-        isAvailable,
+        isAvailable: food.is_available,
         cookTime: cookTime ? parseInt(cookTime, 10) : undefined,
         // images: imageUrls.length > 0 ? imageUrls : undefined,
       });
@@ -85,35 +80,35 @@ export default function EditFoodModal({ isOpen, food, onClose, onSuccess }: Edit
     }
   };
 
-  const handleClose = () => {
-    setName("");
-    setDescription("");
-    setSelectedCategoryIds([]);
-    setIsAvailable(true);
-    setError(null);
-    setIsDropdownOpen(false);
-    onClose();
-  };
-
-  if (!isOpen || !food) return null;
-
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
         <div className={styles.header}>
           <h2 className={styles.title}>Edit Food</h2>
-          <button className={styles.closeButton} onClick={handleClose}>
+          <button type="button" className={styles.closeButton} onClick={onClose}>
             <X size={24} strokeWidth={2} />
           </button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className={styles.field}>
-            <label>Food Name <span className={styles.required}>*</span></label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} disabled={loading} />
+            <label>
+              Food Name <span className={styles.required}>*</span>
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={loading}
+            />
           </div>
           <div className={styles.field}>
             <label>Description</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} disabled={loading} />
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              disabled={loading}
+            />
           </div>
           <div className={styles.field}>
             <label htmlFor="cookTime">
@@ -135,22 +130,37 @@ export default function EditFoodModal({ isOpen, food, onClose, onSuccess }: Edit
             <input type="number" step="0.01" min="0" value={price} onChange={(e) => setPrice(e.target.value)} disabled={loading} />
           </div> */}
           <div className={styles.field}>
-            <label>Category <span className={styles.required}>*</span></label>
+            <label>
+              Category <span className={styles.required}>*</span>
+            </label>
             {loadingCategories ? (
               <p className={styles.muted}>Loading...</p>
             ) : (
               <div className={styles.dropdownWrapper}>
-                <button type="button" className={styles.dropdownTrigger} onClick={() => setIsDropdownOpen(!isDropdownOpen)} disabled={loading}>
-                  {selectedCategoryIds.length > 0 ? `Selected ${selectedCategoryIds.length} categories` : "Select categories..."}
+                <button
+                  type="button"
+                  className={styles.dropdownTrigger}
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  disabled={loading}
+                >
+                  {selectedCategoryIds.length > 0
+                    ? `Selected ${selectedCategoryIds.length} categories`
+                    : "Select categories..."}
                 </button>
                 {isDropdownOpen && (
                   <div className={styles.dropdownMenu}>
                     {categories.map((cat) => (
                       <label key={cat.id} className={styles.dropdownItem}>
-                        <input type="checkbox" checked={selectedCategoryIds.includes(cat.id)}
+                        <input
+                          type="checkbox"
+                          checked={selectedCategoryIds.includes(cat.id)}
                           onChange={(e) => {
-                            if (e.target.checked) setSelectedCategoryIds([...selectedCategoryIds, cat.id]);
-                            else setSelectedCategoryIds(selectedCategoryIds.filter(id => id !== cat.id));
+                            if (e.target.checked)
+                              setSelectedCategoryIds([...selectedCategoryIds, cat.id]);
+                            else
+                              setSelectedCategoryIds(
+                                selectedCategoryIds.filter((id) => id !== cat.id),
+                              );
                           }}
                           disabled={loading}
                         />
@@ -162,29 +172,30 @@ export default function EditFoodModal({ isOpen, food, onClose, onSuccess }: Edit
               </div>
             )}
           </div>
-
-          {/* <div className={styles.field}>
-            <label>Image (URL)</label>
-            <div className={styles.imageInputGroup}>
-              <input type="url" value={imageInput} onChange={(e) => setImageInput(e.target.value)} disabled={loading} />
-              <button type="button" className={styles.addImageBtn} onClick={handleAddImage} disabled={loading}>Add Image</button>
-            </div>
-            <div className={styles.imagePreviewList}>
-              {imageUrls.map((url, idx) => (
-                <div key={idx} className={styles.imagePreviewItem}>
-                  <img src={url} className={styles.imagePreview} />
-                  <button type="button" className={styles.removeImageBtn} onClick={() => handleRemoveImage(idx)} disabled={loading}>×</button>
-                </div>
-              ))}
-            </div>
-          </div> */}
           {error && <p className={styles.error}>{error}</p>}
           <div className={styles.actions}>
-            <button type="button" className={styles.cancelBtn} onClick={handleClose} disabled={loading}>Cancel</button>
-            <button type="submit" className={styles.submitBtn} disabled={loading}>{loading ? "Saving..." : "Save Changes"}</button>
+            <button
+              type="button"
+              className={styles.cancelBtn}
+              onClick={onClose}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button type="submit" className={styles.submitBtn} disabled={loading}>
+              {loading ? "Saving..." : "Save Changes"}
+            </button>
           </div>
         </form>
       </div>
     </div>
   );
+}
+
+export default function EditFoodModal({ isOpen, food, onClose, onSuccess }: EditFoodModalProps) {
+  if (!isOpen || !food) return null;
+
+  // Keyed by food so opening a different item remounts with fresh fields, rather
+  // than resetting them from an effect on every open.
+  return <EditFoodForm key={food.id} food={food} onClose={onClose} onSuccess={onSuccess} />;
 }

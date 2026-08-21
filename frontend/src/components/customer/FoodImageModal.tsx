@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { X, ChevronLeft, ChevronRight,} from "lucide-react";
+import { useState } from "react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 import type { Food } from "@/types";
 import styles from "./FoodImageModal.module.scss";
@@ -12,25 +12,15 @@ interface FoodImageModalProps {
   onClose: () => void;
 }
 
-export default function FoodImageModal({
-  isOpen,
-  food,
-  onClose,
-}: FoodImageModalProps) {
+interface FoodImageModalContentProps {
+  food: Food;
+  onClose: () => void;
+}
+
+function FoodImageModalContent({ food, onClose }: FoodImageModalContentProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  useEffect(() => {
-    if (isOpen) {
-      setCurrentIndex(0);
-    }
-  }, [isOpen, food]);
-
-  if (!isOpen || !food) {
-    return null;
-  }
-
   const images = food.images ?? [];
-
   if (images.length === 0) {
     return null;
   }
@@ -38,30 +28,16 @@ export default function FoodImageModal({
   const currentImage = images[currentIndex];
 
   const handlePrevious = () => {
-    setCurrentIndex((prev) =>
-      prev === 0
-        ? images.length - 1
-        : prev - 1
-    );
+    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) =>
-      prev === images.length - 1
-        ? 0
-        : prev + 1
-    );
+    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   };
 
   return (
-    <div
-      className={styles.overlay}
-      onClick={onClose}
-    >
-      <div
-        className={styles.modal}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
           className={styles.closeButton}
@@ -71,13 +47,9 @@ export default function FoodImageModal({
           <X size={24} />
         </button>
 
-        {/* LEFT - IMAGE */}
         <div className={styles.imagePanel}>
-          <img
-            src={currentImage.url}
-            alt={food.name}
-            className={styles.mainImage}
-          />
+          {/* eslint-disable-next-line @next/next/no-img-element -- menu images use CDN URLs from the API */}
+          <img src={currentImage.url} alt={food.name} className={styles.mainImage} />
 
           {images.length > 1 && (
             <>
@@ -108,15 +80,10 @@ export default function FoodImageModal({
           )}
         </div>
 
-        {/* RIGHT - FOOD INFORMATION */}
         <div className={styles.infoPanel}>
-          <h2 className={styles.name}>
-            {food.name}
-          </h2>
+          <h2 className={styles.name}>{food.name}</h2>
 
-          <p className={styles.price}>
-            ${food.price.toFixed(2)}
-          </p>
+          <p className={styles.price}>${food.price.toFixed(2)}</p>
 
           {food.description && (
             <div className={styles.descriptionSection}>
@@ -125,25 +92,30 @@ export default function FoodImageModal({
             </div>
           )}
 
-          {food.categories &&
-            food.categories.length > 0 && (
-              <div className={styles.categorySection}>
-                <h3>Category</h3>
+          {food.categories && food.categories.length > 0 && (
+            <div className={styles.categorySection}>
+              <h3>Category</h3>
 
-                <div className={styles.categories}>
-                  {food.categories.map((category) => (
-                    <span
-                      key={category.id}
-                      className={styles.category}
-                    >
-                      {category.name}
-                    </span>
-                  ))}
-                </div>
+              <div className={styles.categories}>
+                {food.categories.map((category) => (
+                  <span key={category.id} className={styles.category}>
+                    {category.name}
+                  </span>
+                ))}
               </div>
-            )}
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
+}
+
+export default function FoodImageModal({ isOpen, food, onClose }: FoodImageModalProps) {
+  if (!isOpen || !food) {
+    return null;
+  }
+
+  // Remount when food changes so the carousel index resets without an effect.
+  return <FoodImageModalContent key={food.id} food={food} onClose={onClose} />;
 }

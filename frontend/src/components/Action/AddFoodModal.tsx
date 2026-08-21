@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import { cn } from "@/lib/cn";
 import { adminApi, isApiError, menuApi } from "@/lib/api";
 import type { Category } from "@/types";
 import styles from "./AddFoodModal.module.scss";
@@ -40,7 +39,7 @@ export default function AddFoodModal({
         try {
           const data = await menuApi.getCategories();
           setCategories(data);
-        } catch (err) {
+        } catch {
           setError("Unable to load categories.");
         } finally {
           setLoadingCategories(false);
@@ -247,6 +246,7 @@ export default function AddFoodModal({
               <div className={styles.imagePreviewList}>
                 {imageUrls.map((url, index) => (
                   <div key={index} className={styles.imagePreviewItem}>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- previews use arbitrary admin-supplied URLs */}
                     <img src={url} alt={`Image ${index + 1}`} className={styles.imagePreview} />
                     <button
                       type="button"
