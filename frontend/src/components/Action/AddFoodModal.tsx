@@ -20,6 +20,7 @@ export default function AddFoodModal({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [cookTime, setCookTime] = useState("");
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [isAvailable, setIsAvailable] = useState(true);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
@@ -82,6 +83,7 @@ export default function AddFoodModal({
         name: name.trim(),
         description: description.trim() || undefined,
         price: parseFloat(price),
+        cookTime: parseInt(cookTime, 10),
         categoryIds: selectedCategoryIds,
         isAvailable,
         images: imageUrls.length > 0 ? imageUrls : undefined,
@@ -144,11 +146,12 @@ export default function AddFoodModal({
             />
           </div>
 
-          <div className={styles.field}>
-            <label htmlFor="foodPrice">
+          <div className={styles.priceCookTimeRow}>
+            <div className={styles.field}>
+              <label htmlFor="foodPrice">
                 Price (AUD) <span className={styles.required}>*</span>
-            </label>
-            <input
+              </label>
+              <input
                 id="foodPrice"
                 type="number"
                 step="0.01"
@@ -157,8 +160,25 @@ export default function AddFoodModal({
                 onChange={(e) => setPrice(e.target.value)}
                 placeholder="0.00"
                 disabled={loading}
-            />
+              />
             </div>
+
+            <div className={styles.field}>
+              <label htmlFor="cookTime">
+                Cook Time (min) <span className={styles.required}>*</span>
+              </label>
+              <input
+                id="cookTime"
+                type="number"
+                min="1"
+                step="1"
+                value={cookTime}
+                onChange={(e) => setCookTime(e.target.value)}
+                placeholder="e.g. 15"
+                disabled={loading}
+              />
+            </div>
+          </div>
 
           <div className={styles.field}>
             <label>Category <span className={styles.required}>*</span></label>

@@ -1,18 +1,13 @@
-import {
-  IsString,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsBoolean,
-  IsArray,
-  IsUUID,
-  Min,
-} from 'class-validator';
+import {IsString, IsNotEmpty, IsNumber, IsOptional, IsBoolean, IsArray, IsUUID, Min, IsInt,} from 'class-validator';
 
 export class CreateFoodDto {
   @IsString()
   @IsNotEmpty()
   name!: string;
+
+  @IsInt()
+  @Min(0)
+  cookTime!: number;
 
   @IsNumber()
   @Min(0)

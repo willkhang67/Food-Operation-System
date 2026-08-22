@@ -32,6 +32,7 @@ export class FoodService {
       name: food.name,
       price: Number(food.price),
       description: food.description,
+      cookTime: food.cookTime,
       is_available: food.is_available,
       status: food.status,
       categories: (food.categories ?? []).map((c) => ({
@@ -60,6 +61,7 @@ export class FoodService {
       price: Number(food.price),
       is_available: food.is_available,
       status: food.status,
+      cookTime: food.cookTime,
       createdAt: food.createdAt,
       updatedAt: food.updatedAt,
     };
@@ -97,6 +99,7 @@ export class FoodService {
       description: dto.description ?? null,
       is_available: dto.is_available ?? true,
       status: 1,
+      cookTime: dto.cookTime,
       categories,
     });
 
@@ -175,6 +178,10 @@ export class FoodService {
       food.description = dto.description;
     }
 
+    if (dto.cookTime !== undefined) {
+      food.cookTime = dto.cookTime;
+    }
+
     const updated = await this.foodRepo.save(food);
     return this.toResponseDto(updated);
   }
@@ -204,6 +211,7 @@ export class FoodService {
       description: current.description,
       price: current.price,
       is_available: current.is_available,
+      cookTime: current.cookTime,
       status: 0,
       categories: current.categories,
     });
