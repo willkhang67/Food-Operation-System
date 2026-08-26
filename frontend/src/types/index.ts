@@ -50,6 +50,7 @@ export interface Food {
   description: string | null;
   is_available: boolean;
   status: number;
+  cookTime?: number;
   categories: Category[];
   images?: FoodImage[];
   createdAt: string;

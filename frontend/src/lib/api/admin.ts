@@ -29,6 +29,7 @@ export const adminApi = {
     description?: string;
     price: number;
     categoryIds: string[];
+    cookTime?: number;
     isAvailable?: boolean;
     images?: string[];
   }) =>
@@ -43,6 +44,7 @@ export const adminApi = {
     payload: {
       name?: string;
       description?: string;
+      cookTime?: number;
       categoryIds?: string[];
       isAvailable?: boolean;
     },
