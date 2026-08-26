@@ -9,7 +9,7 @@ export interface FoodBasic {
   price: number;
   is_available: boolean;
   status: number;
-  cook_time: number;
+  cookTime: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -30,11 +30,6 @@ export interface Category {
   updatedAt: string;
 }
 
-export interface FoodImage {
-  id: string;
-  url: string;
-}
-
 /** Mirrors the API's FoodBasicDto, returned by the admin availability toggle. */
 export interface FoodSummary {
   id: string;
@@ -42,7 +37,7 @@ export interface FoodSummary {
   price: number;
   is_available: boolean;
   status: number;
-  cook_time: number;
+  cookTime: number;
 }
 
 export interface Food {
@@ -52,11 +47,7 @@ export interface Food {
   description: string | null;
   is_available: boolean;
   status: number;
-<<<<<<< HEAD
-  cookTime?: number;
-=======
-  cook_time: number;
->>>>>>> bea23d3 (feat: entity with cook time)
+  cookTime: number;
   categories: Category[];
   images?: FoodImage[];
   createdAt: string;

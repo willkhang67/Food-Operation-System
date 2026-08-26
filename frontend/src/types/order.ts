@@ -14,7 +14,7 @@ export interface OrderItem {
   id: string;
   foodId: string;
   foodName: string;
-  /** Minutes for one unit; snapped at order create from food.cook_time. */
+  /** Minutes for one unit; snapped at order create from food.cookTime. */
   cookTime: number;
   unitPrice: number;
   quantity: number;
