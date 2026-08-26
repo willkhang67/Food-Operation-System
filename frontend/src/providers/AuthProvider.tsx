@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { authApi, isAbortError, isApiError } from "@/lib/api";
 import {
   ApiErrorCode,
@@ -48,8 +49,14 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children, initialUser = null }: AuthProviderProps) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<AuthUser | null>(initialUser);
   const [status, setStatus] = useState<AuthStatus>(initialUser ? "authenticated" : "loading");
+
+  /** Drops in-memory server state so a shared browser cannot show the previous account's orders. */
+  const clearServerStateCache = useCallback(() => {
+    queryClient.clear();
+  }, [queryClient]);
 
   const resolve = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -81,29 +88,40 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
 
   // Errors from these actions are intentionally not swallowed: the form that
   // triggered them is the only place that can show them usefully.
-  const login = useCallback(async (credentials: LoginCredentials) => {
-    setUser(await authApi.login(credentials));
-    setStatus("authenticated");
-  }, []);
-
-  const register = useCallback(async (payload: RegisterPayload): Promise<RegisterResult> => {
-    const result = await authApi.register(payload);
-
-    if (result.sessionStarted) {
-      setUser(result.user);
+  const login = useCallback(
+    async (credentials: LoginCredentials) => {
+      // Wipe before applying the new session so orders keyed to another userId
+      // cannot flash on the next paint.
+      clearServerStateCache();
+      setUser(await authApi.login(credentials));
       setStatus("authenticated");
-    }
+    },
+    [clearServerStateCache],
+  );
 
-    return { sessionStarted: result.sessionStarted };
-  }, []);
+  const register = useCallback(
+    async (payload: RegisterPayload): Promise<RegisterResult> => {
+      const result = await authApi.register(payload);
+
+      if (result.sessionStarted) {
+        clearServerStateCache();
+        setUser(result.user);
+        setStatus("authenticated");
+      }
+
+      return { sessionStarted: result.sessionStarted };
+    },
+    [clearServerStateCache],
+  );
 
   const logout = useCallback(async () => {
     // State is cleared only after the server confirms, so a failed sign-out
     // never leaves the UI claiming to be signed out while cookies survive.
     await authApi.logout();
+    clearServerStateCache();
     setUser(null);
     setStatus("anonymous");
-  }, []);
+  }, [clearServerStateCache]);
 
   const reload = useCallback(() => resolve(), [resolve]);
 

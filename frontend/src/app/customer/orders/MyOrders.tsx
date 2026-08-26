@@ -1,67 +1,50 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import RouteGuard from "@/components/auth/RouteGuard";
 import OrderCard from "@/components/customer/OrderCard";
-import { isAbortError, isApiError, orderApi, paymentApi } from "@/lib/api";
+import { isApiError, orderApi, paymentApi } from "@/lib/api";
 import { toErrorMessage } from "@/lib/error-message";
 import { isPayable } from "@/lib/order-status";
+import { queryKeys } from "@/lib/query-keys";
 import { useAuthDialog } from "@/providers/AuthDialogProvider";
 import { useAuth } from "@/providers/AuthProvider";
 import { ApiErrorCode, type Order } from "@/types";
 import styles from "./orders.module.scss";
 
-function OrderHistory() {
+interface OrderHistoryProps {
+  userId: string;
+}
+
+function OrderHistory({ userId }: OrderHistoryProps) {
   const { openAuth } = useAuthDialog();
+  const queryClient = useQueryClient();
 
-  const [orders, setOrders] = useState<Order[] | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
-  /** Bumped to re-run the fetch, so the effect stays the only thing that reads. */
-  const [reloadToken, setReloadToken] = useState(0);
-
-  // Two separate failures, because they have different lifetimes. A load error
-  // belongs to the fetch and is cleared by the next successful one. A refused
-  // payment has to outlive the refetch it triggers — sharing one state meant the
-  // refetch wiped the sentence explaining why the button did nothing.
-  const [loadError, setLoadError] = useState<string | null>(null);
+  // Payment refusals must outlive a refetch — sharing state with loadError used
+  // to wipe the explanation when the list reloaded.
   const [payNotice, setPayNotice] = useState<string | null>(null);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const { signal } = controller;
+  const ordersQuery = useQuery({
+    queryKey: queryKeys.orders.mine(userId),
+    queryFn: ({ signal }) => orderApi.getMine({ signal }),
+    // Orders change after Stripe webhooks; stay fresh when the tab is focused.
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
 
-    // Nothing is set before the first await on purpose: touching state
-    // synchronously here would render the list twice on every reload.
-    async function load() {
-      try {
-        const mine = await orderApi.getMine({ signal });
-        setOrders(mine);
-        setLoadError(null);
-      } catch (cause) {
-        if (isAbortError(cause)) return;
-        setLoadError(toErrorMessage(cause, "Could not load your orders."));
-      } finally {
-        if (!signal.aborted) setIsLoading(false);
-      }
-    }
+  const orders = ordersQuery.data ?? null;
+  const isLoading = ordersQuery.isFetching;
+  const isFirstLoad = ordersQuery.isPending && orders === null;
+  const loadError = ordersQuery.error
+    ? toErrorMessage(ordersQuery.error, "Could not load your orders.")
+    : null;
 
-    void load();
-
-    return () => controller.abort();
-  }, [reloadToken]);
-
-  /** Re-reads the list without touching either message. */
-  function refetch() {
-    setIsLoading(true);
-    setReloadToken((token) => token + 1);
-  }
-
-  /** The customer asking for a clean look, so old action feedback goes away. */
   function refreshNow() {
     setPayNotice(null);
-    refetch();
+    void queryClient.invalidateQueries({ queryKey: queryKeys.orders.mine(userId) });
   }
 
   function reportPaymentFailure(cause: unknown) {
@@ -76,17 +59,15 @@ function OrderHistory() {
         openAuth("login");
         return;
 
-      // This list is a snapshot. Any of these means the API has moved on from
-      // what is on screen, so re-read rather than argue with it.
       case ApiErrorCode.Conflict:
         setPayNotice("This order has already been paid for.");
-        refetch();
+        void queryClient.invalidateQueries({ queryKey: queryKeys.orders.mine(userId) });
         return;
 
       case ApiErrorCode.ValidationError:
       case ApiErrorCode.NotFound:
         setPayNotice("This order can no longer be paid for. Your orders have been updated.");
-        refetch();
+        void queryClient.invalidateQueries({ queryKey: queryKeys.orders.mine(userId) });
         return;
 
       default:
@@ -101,11 +82,7 @@ function OrderHistory() {
     try {
       const { checkoutUrl } = await paymentApi.startCheckout(order.id);
 
-      // Same tab, matching the cart: a blocked popup would leave the customer
-      // looking at an unchanged page, unsure whether they had paid.
       window.location.assign(checkoutUrl);
-      // payingOrderId stays set — the page is navigating away, and releasing the
-      // button now would invite a second checkout session for the same order.
     } catch (cause) {
       setPayingOrderId(null);
       reportPaymentFailure(cause);
@@ -113,7 +90,6 @@ function OrderHistory() {
   }
 
   const hasUnpaid = orders?.some((order) => isPayable(order.status)) ?? false;
-  const isFirstLoad = isLoading && orders === null;
 
   return (
     <main className={styles.page}>
@@ -136,11 +112,6 @@ function OrderHistory() {
 
       {isFirstLoad && <p className={styles.status}>Loading your orders…</p>}
 
-      {/*
-        The honest answer to webhook lag. Stripe returns the customer before the
-        signed webhook necessarily lands, so an order can still read as unpaid
-        for a second or two after paying. Saying so beats leaving them to guess.
-      */}
       {hasUnpaid && (
         <p className={styles.hint}>
           Just paid for something? Confirmation can take a few seconds — press Refresh.
@@ -185,10 +156,9 @@ export default function MyOrders() {
     <RouteGuard>
       {/*
         Keyed by account so that signing in as someone else in this tab remounts
-        with empty state. Without it, an expired session recovered through the
-        auth dialog would leave the previous customer's orders on screen.
+        with empty state. Query keys also include userId — belt and braces.
       */}
-      <OrderHistory key={user?.id ?? "anonymous"} />
+      {user ? <OrderHistory key={user.id} userId={user.id} /> : null}
     </RouteGuard>
   );
 }

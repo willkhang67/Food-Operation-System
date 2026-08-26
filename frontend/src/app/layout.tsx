@@ -5,6 +5,7 @@ import Header from "@/components/header/Header";
 import RoleNav from "@/components/layout/RoleNav";
 import { AuthDialogProvider } from "@/providers/AuthDialogProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
+import QueryProvider from "@/providers/QueryProvider";
 import styles from "./layout.module.scss";
 
 const fraunces = Fraunces({
@@ -28,15 +29,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={`${fraunces.variable} ${nunito.variable}`}>
-        <AuthProvider>
-          <AuthDialogProvider>
-            <div className={styles.topBar}>
-              <Header />
-              <RoleNav />
-            </div>
-            {children}
-          </AuthDialogProvider>
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <AuthDialogProvider>
+              <div className={styles.topBar}>
+                <Header />
+                <RoleNav />
+              </div>
+              {children}
+            </AuthDialogProvider>
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );
