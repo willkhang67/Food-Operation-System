@@ -9,6 +9,7 @@ export interface FoodBasic {
   price: number;
   is_available: boolean;
   status: number;
+  cook_time: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -41,6 +42,7 @@ export interface FoodSummary {
   price: number;
   is_available: boolean;
   status: number;
+  cook_time: number;
 }
 
 export interface Food {
@@ -50,7 +52,11 @@ export interface Food {
   description: string | null;
   is_available: boolean;
   status: number;
+<<<<<<< HEAD
   cookTime?: number;
+=======
+  cook_time: number;
+>>>>>>> bea23d3 (feat: entity with cook time)
   categories: Category[];
   images?: FoodImage[];
   createdAt: string;
