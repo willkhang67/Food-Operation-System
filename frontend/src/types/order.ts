@@ -1,5 +1,5 @@
 /** Mirrors the API's OrderStatus enum. */
-export type OrderStatus = "pending" | "paid" | "processing" | "delivered" | "cancelled";
+export type OrderStatus = "pending" | "paid" | "processing" | "ready" | "cancelled";
 
 /** Mirrors the API's PaymentStatus enum. */
 export type PaymentStatus = "pending" | "paid" | "failed" | "cancelled" | "expired";
@@ -26,6 +26,10 @@ export interface Order {
   totalItems: number;
   totalPrice: number;
   items: OrderItem[];
+  /** ISO timestamp; null until paid (or on legacy rows). */
+  estimatedReadyAt: string | null;
+  /** ISO timestamp of payment confirmation; null until paid. */
+  paidAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
