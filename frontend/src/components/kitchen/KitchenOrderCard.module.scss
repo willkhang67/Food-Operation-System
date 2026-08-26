@@ -1,0 +1,149 @@
+@use "../../styles/breakpoints" as bp;
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  padding: 1rem;
+}
+
+.overdue {
+  border-color: var(--color-danger-border);
+  background-color: var(--color-danger-surface);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.badge {
+  border-radius: var(--radius-pill);
+  padding: 0.1875rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.waiting {
+  border: 1px solid var(--color-border-strong);
+  background-color: var(--color-surface-muted);
+  color: var(--color-text-muted);
+}
+
+.positive {
+  border: 1px solid var(--color-action);
+  background-color: var(--color-action);
+  color: var(--color-action-text);
+}
+
+.active {
+  border: 1px solid var(--color-action);
+  background-color: transparent;
+  color: var(--color-text);
+}
+
+.settled {
+  border: 1px solid var(--color-border);
+  background-color: transparent;
+  color: var(--color-text-subtle);
+}
+
+.cancelled {
+  border: 1px solid var(--color-danger-border);
+  background-color: var(--color-danger-surface);
+  color: var(--color-danger);
+}
+
+.placedAt {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.countdown {
+  margin: 0;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-text);
+}
+
+.countdownOverdue {
+  color: var(--color-danger);
+}
+
+.items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.9375rem;
+  color: var(--color-text);
+}
+
+.qty {
+  font-weight: 700;
+}
+
+.foot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.reference {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-family: ui-monospace, monospace;
+  color: var(--color-text-subtle);
+  word-break: break-all;
+}
+
+.error {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-danger);
+}
+
+.readyBtn {
+  margin-top: 0.25rem;
+  border: none;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-action);
+  padding: 0.625rem 1rem;
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-action-text);
+  cursor: pointer;
+  transition: background-color var(--transition-base);
+
+  &:enabled:hover {
+    background-color: var(--color-action-hover);
+  }
+
+  &:disabled {
+    background-color: var(--color-surface-disabled);
+    color: var(--color-text-subtle);
+    cursor: not-allowed;
+  }
+}
+
+@include bp.md {
+  .countdown {
+    font-size: 2rem;
+  }
+}
