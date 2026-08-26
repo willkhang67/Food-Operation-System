@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { isApiError, menuApi, orderApi, paymentApi } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { toErrorMessage } from "@/lib/error-message";
+import { queryKeys } from "@/lib/query-keys";
 import { useAuthDialog } from "@/providers/AuthDialogProvider";
 import { useAuth } from "@/providers/AuthProvider";
 import { useCart } from "@/providers/CartProvider";
@@ -31,6 +33,7 @@ export default function CartSheet({ onClose }: CartSheetProps) {
     useCart();
   const { user } = useAuth();
   const { openAuth } = useAuthDialog();
+  const queryClient = useQueryClient();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +95,12 @@ export default function CartSheet({ onClose }: CartSheetProps) {
    */
   async function findUnavailableLines(): Promise<readonly CartItem[]> {
     try {
-      const foods = await menuApi.getFoods();
+      // Prefer the shared menu cache so sold-out checks do not force a cold fetch.
+      const foods = await queryClient.fetchQuery({
+        queryKey: queryKeys.menu.foods,
+        queryFn: ({ signal }) => menuApi.getFoods({ signal }),
+        staleTime: 60_000,
+      });
       const available = new Set(foods.filter((food) => food.is_available).map((food) => food.id));
 
       return items.filter((line) => !available.has(line.foodId));
@@ -152,6 +160,11 @@ export default function CartSheet({ onClose }: CartSheetProps) {
     try {
       const orderId = createdOrderId ?? (await orderApi.create(toOrderItems())).id;
       setCreatedOrderId(orderId);
+
+      // New pending order must appear on /customer/orders without waiting for staleTime.
+      if (user) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.orders.mine(user.id) });
+      }
 
       const { checkoutUrl } = await paymentApi.startCheckout(orderId);
 
