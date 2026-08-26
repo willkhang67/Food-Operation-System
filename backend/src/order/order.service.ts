@@ -5,6 +5,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Food } from '../food/entities/food.entity';
@@ -17,9 +18,12 @@ import { OrderItem } from './entities/order-item.entity';
 import { Order } from './entities/order.entity';
 import { OrderStatus } from './enums/order-status.enum';
 
+const DEFAULT_PREP_MINUTES = 15;
+
 @Injectable()
 export class OrderService {
   private readonly logger = new Logger(OrderService.name);
+  private readonly prepMinutes: number;
 
   constructor(
     @InjectRepository(Order)
@@ -28,7 +32,13 @@ export class OrderService {
     private readonly orderItemRepo: Repository<OrderItem>,
     @InjectRepository(Food)
     private readonly foodRepo: Repository<Food>,
-  ) {}
+    config: ConfigService,
+  ) {
+    const raw = config.get<string>('KITCHEN_DEFAULT_PREP_MINUTES');
+    const parsed = raw !== undefined ? Number(raw) : DEFAULT_PREP_MINUTES;
+    this.prepMinutes =
+      Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : DEFAULT_PREP_MINUTES;
+  }
 
   //convert order item to response dto
   private toItemResponseDto(item: OrderItem): OrderItemResponseDto {
@@ -51,9 +61,15 @@ export class OrderService {
       totalItems: order.totalItems,
       totalPrice: Number(order.totalPrice),
       items: (order.items ?? []).map((item) => this.toItemResponseDto(item)),
+      estimatedReadyAt: order.estimatedReadyAt ?? null,
+      paidAt: order.paidAt ?? null,
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
     };
+  }
+
+  private computeEstimatedReadyAt(from: Date = new Date()): Date {
+    return new Date(from.getTime() + this.prepMinutes * 60_000);
   }
 
   //find order with at least 1 food item
@@ -175,9 +191,14 @@ export class OrderService {
 
     const allowed: Record<OrderStatus, OrderStatus[]> = {
       [OrderStatus.PENDING]: [OrderStatus.CANCELLED],
-      [OrderStatus.PAID]: [OrderStatus.PROCESSING, OrderStatus.CANCELLED],
-      [OrderStatus.PROCESSING]: [OrderStatus.DELIVERED, OrderStatus.CANCELLED],
-      [OrderStatus.DELIVERED]: [],
+      // Kitchen MVP: Mark ready from paid in one tap; processing kept for later "started".
+      [OrderStatus.PAID]: [
+        OrderStatus.READY,
+        OrderStatus.PROCESSING,
+        OrderStatus.CANCELLED,
+      ],
+      [OrderStatus.PROCESSING]: [OrderStatus.READY, OrderStatus.CANCELLED],
+      [OrderStatus.READY]: [],
       [OrderStatus.CANCELLED]: [],
     };
 
@@ -221,6 +242,23 @@ export class OrderService {
   async markAsPaid(orderId: string): Promise<OrderResponseDto> {
     const order = await this.requireOrderWithItems(orderId);
     if (order.status === OrderStatus.PAID) {
+      // Legacy paid rows (or a race) may lack an ETA — backfill once so kitchen clocks work.
+      let dirty = false;
+      if (!order.estimatedReadyAt) {
+        order.estimatedReadyAt = this.computeEstimatedReadyAt();
+        dirty = true;
+      }
+      if (!order.paidAt) {
+        order.paidAt = new Date();
+        dirty = true;
+      }
+      if (dirty) {
+        const patched = await this.orderRepo.save(order);
+        this.logger.log(
+          `Order paid fields backfilled orderId=${orderId} estimatedReadyAt=${patched.estimatedReadyAt?.toISOString()}`,
+        );
+        return this.toResponseDto(patched);
+      }
       this.logger.debug(`markAsPaid idempotent skip orderId=${orderId}`);
       return this.toResponseDto(order);
     }
@@ -232,9 +270,14 @@ export class OrderService {
         `Cannot mark order as paid from status "${order.status}"`,
       );
     }
+    const paidAt = new Date();
     order.status = OrderStatus.PAID;
+    order.paidAt = paidAt;
+    order.estimatedReadyAt = this.computeEstimatedReadyAt(paidAt);
     const updated = await this.orderRepo.save(order);
-    this.logger.log(`Order marked paid orderId=${orderId}`);
+    this.logger.log(
+      `Order marked paid orderId=${orderId} estimatedReadyAt=${updated.estimatedReadyAt?.toISOString()}`,
+    );
     return this.toResponseDto(updated);
   }
 
@@ -247,7 +290,8 @@ export class OrderService {
         status: In([OrderStatus.PAID, OrderStatus.PROCESSING]),
       },
       relations: { items: true },
-      order: { createdAt: 'ASC' },
+      // Oldest paid ticket first; createdAt breaks ties / legacy null paidAt.
+      order: { paidAt: 'ASC', createdAt: 'ASC' },
     });
     return orders.map((order) => this.toResponseDto(order));
   }
