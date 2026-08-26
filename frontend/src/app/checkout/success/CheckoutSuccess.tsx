@@ -3,9 +3,12 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import RouteGuard from "@/components/auth/RouteGuard";
 import { isAbortError, orderApi } from "@/lib/api";
 import { toErrorMessage } from "@/lib/error-message";
+import { queryKeys } from "@/lib/query-keys";
+import { useAuth } from "@/providers/AuthProvider";
 import type { Order, OrderStatus } from "@/types";
 import CheckoutPanel from "../CheckoutPanel";
 import styles from "../checkout.module.scss";
@@ -49,6 +52,8 @@ function OrderSummary({ order }: { order: Order }) {
 }
 
 function ConfirmedOrder({ orderId }: { orderId: string }) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isConfirming, setIsConfirming] = useState(true);
@@ -70,6 +75,11 @@ function ConfirmedOrder({ orderId }: { orderId: string }) {
           return;
         }
 
+        // Webhook (or timeout) settled — orders list must not keep a stale pending row.
+        if (user) {
+          void queryClient.invalidateQueries({ queryKey: queryKeys.orders.mine(user.id) });
+        }
+
         setIsConfirming(false);
       } catch (pollError) {
         if (isAbortError(pollError)) return;
@@ -85,7 +95,7 @@ function ConfirmedOrder({ orderId }: { orderId: string }) {
       controller.abort();
       clearTimeout(timer);
     };
-  }, [orderId]);
+  }, [orderId, queryClient, user]);
 
   if (error) {
     return (
