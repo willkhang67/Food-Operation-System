@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.102.5",
     "lucide-react": "^1.28.0",
     "next": "16.2.10",
     "react": "19.2.4",

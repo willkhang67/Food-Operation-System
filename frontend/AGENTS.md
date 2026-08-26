@@ -78,18 +78,19 @@ the app still runs.
 ## Data fetching
 
 Client components fetch through the typed modules in `src/lib/api/` (`authApi`,
-`menuApi`, `orderApi`, `paymentApi`) — never bare `fetch`. Pass an
-`AbortController` signal from effects and ignore aborts on cleanup:
+`menuApi`, `orderApi`, `paymentApi`) — never bare `fetch`. List/detail reads that
+survive tab switches use TanStack Query (`QueryProvider`, keys in
+`src/lib/query-keys.ts`). Pass the query `signal` into `apiFetch`. Auth, CSRF,
+and checkout mutations stay uncached. Call `queryClient.clear()` on login /
+logout (see `AuthProvider`) so private order data cannot leak across accounts.
+Do not persist the query cache to `localStorage`.
 
 ```ts
-const controller = new AbortController();
-try {
-  setFoods(await menuApi.getFoods({ signal: controller.signal }));
-} catch (error) {
-  if (isAbortError(error)) return;
-  setError(toErrorMessage(error, "Failed to load menu."));
-}
-return () => controller.abort();
+useQuery({
+  queryKey: queryKeys.menu.foods,
+  queryFn: ({ signal }) => menuApi.getFoods({ signal }),
+  staleTime: 60_000,
+});
 ```
 
 Branch on `error.code` against `ApiErrorCode`, never on the message text —
