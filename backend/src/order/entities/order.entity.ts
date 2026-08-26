@@ -44,6 +44,13 @@ export class Order {
   totalPrice!: number;
 
   @Column({
+    name: 'estimated_pickup_time',
+    type: 'int',
+    nullable: true,
+  })
+  estimatedPickupTime!: number | null;
+
+  @Column({
     type: 'enum',
     enum: OrderStatus,
     default: OrderStatus.PENDING,

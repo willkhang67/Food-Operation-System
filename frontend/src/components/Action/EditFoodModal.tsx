@@ -22,6 +22,7 @@ interface EditFoodFormProps {
 function EditFoodForm({ food, onClose, onSuccess }: EditFoodFormProps) {
   const [name, setName] = useState(food.name);
   const [description, setDescription] = useState(food.description || "");
+  const [cookTime, setCookTime] = useState("");
   const [selectedCategoryIds, setSelectedCategoryIds] = useState(() =>
     food.categories.map((category) => category.id),
   );
@@ -67,6 +68,8 @@ function EditFoodForm({ food, onClose, onSuccess }: EditFoodFormProps) {
         description: description.trim() || undefined,
         categoryIds: selectedCategoryIds,
         isAvailable: food.is_available,
+        cookTime: cookTime ? parseInt(cookTime, 10) : undefined,
+        // images: imageUrls.length > 0 ? imageUrls : undefined,
       });
       onSuccess?.();
       onClose();
@@ -107,6 +110,25 @@ function EditFoodForm({ food, onClose, onSuccess }: EditFoodFormProps) {
               disabled={loading}
             />
           </div>
+          <div className={styles.field}>
+            <label htmlFor="cookTime">
+              Cook Time (min) <span className={styles.required}>*</span>
+            </label>
+            <input
+              id="cookTime"
+              type="number"
+              min="1"
+              step="1"
+              value={cookTime}
+              onChange={(e) => setCookTime(e.target.value)}
+              placeholder="e.g. 15"
+              disabled={loading}
+            />
+          </div>
+          {/* <div className={styles.field}>
+            <label>Price (AUD) <span className={styles.required}>*</span></label>
+            <input type="number" step="0.01" min="0" value={price} onChange={(e) => setPrice(e.target.value)} disabled={loading} />
+          </div> */}
           <div className={styles.field}>
             <label>
               Category <span className={styles.required}>*</span>
