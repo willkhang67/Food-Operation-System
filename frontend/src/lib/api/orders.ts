@@ -1,10 +1,25 @@
-import type { CheckoutSession, CreateOrderItem, Order } from "@/types";
+import type { CheckoutSession, CreateOrderItem, Order, OrderStatus } from "@/types";
 import { apiFetch, type QueryOptions } from "./client";
 
 export const orderApi = {
   getMine: (options?: QueryOptions) => apiFetch<Order[]>("/order/me", options),
   getOrder: (id: string, options?: QueryOptions) =>
     apiFetch<Order>(`/order/${encodeURIComponent(id)}`, options),
+  /**
+   * Staff/admin prep board. Only paid and processing orders — ready leaves the queue.
+   */
+  getKitchenQueue: (options?: QueryOptions) =>
+    apiFetch<Order[]>("/order/kitchen", options),
+  /**
+   * Staff/admin status change. Nest enforces the transition table; the UI must
+   * not invent "paid" (webhook only).
+   */
+  updateStatus: (id: string, status: OrderStatus, options?: QueryOptions) =>
+    apiFetch<Order>(`/order/${encodeURIComponent(id)}/status`, {
+      ...options,
+      method: "PATCH",
+      body: { status },
+    }),
   /**
    * Turns the draft cart into a pending order. Only ids and quantities are
    * sent; the API resolves names, prices, and the total from its own records,

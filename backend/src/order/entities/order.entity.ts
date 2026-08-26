@@ -57,6 +57,17 @@ export class Order {
   })
   status!: OrderStatus;
 
+  /**
+   * When the kitchen ETA clock hits this instant the card shows overdue.
+   * Set on markAsPaid; display-only — status still changes via staff PATCH.
+   */
+  @Column({ name: 'estimated_ready_at', type: 'timestamptz', nullable: true })
+  estimatedReadyAt!: Date | null;
+
+  /** Set when Stripe confirms payment; used for kitchen board ordering/display. */
+  @Column({ name: 'paid_at', type: 'timestamptz', nullable: true })
+  paidAt!: Date | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 

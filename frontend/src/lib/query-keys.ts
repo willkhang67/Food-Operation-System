@@ -15,5 +15,6 @@ export const queryKeys = {
   orders: {
     all: ["orders"] as const,
     mine: (userId: string) => ["orders", "mine", userId] as const,
+    kitchen: ["orders", "kitchen"] as const,
   },
 } as const;

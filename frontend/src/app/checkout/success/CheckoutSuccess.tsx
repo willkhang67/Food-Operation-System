@@ -22,7 +22,7 @@ import styles from "../checkout.module.scss";
 const POLL_INTERVAL_MS = 2_000;
 const CONFIRM_TIMEOUT_MS = 20_000;
 
-const SETTLED_STATUSES: OrderStatus[] = ["paid", "processing", "delivered", "cancelled"];
+const SETTLED_STATUSES: OrderStatus[] = ["paid", "processing", "ready", "cancelled"];
 
 function OrdersLink({ variant }: { variant: "primary" | "secondary" }) {
   return (
