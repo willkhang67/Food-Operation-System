@@ -35,9 +35,9 @@ export const ORDER_STATUS_COPY: Record<OrderStatus, OrderStatusCopy> = {
     detail: "The kitchen is working on it now.",
     tone: "active",
   },
-  delivered: {
-    label: "Completed",
-    detail: "This order is finished.",
+  ready: {
+    label: "Ready",
+    detail: "Your order is ready for pickup.",
     tone: "settled",
   },
   cancelled: {
