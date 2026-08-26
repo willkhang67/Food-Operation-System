@@ -207,7 +207,7 @@ without them, and each one would widen it without making it more trustworthy:
 
 | Deferred | Why it can wait |
 | --- | --- |
-| Kitchen display / order queue UI | Staff-facing; the API's `GET /order/kitchen` already exists for it |
+| Kitchen display / order queue UI | Staff `/kitchen` board ships with poll + Mark ready; ETA is display-only |
 | Admin CRUD and sell-out toggles | Admin-facing; the customer path only reads availability |
 | Delivery, item modifiers, tips | Each changes what an order *is*, so it changes pricing and the DTO |
 | Guest checkout | Orders are owned by a user id; anonymous ownership is a data-model decision |
