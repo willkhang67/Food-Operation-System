@@ -3,5 +3,6 @@ export enum OrderStatus {
   PENDING = 'pending',
   CANCELLED = 'cancelled',
   PROCESSING = 'processing',
-  DELIVERED = 'delivered',
+  /** Food is ready for the customer (formerly "delivered"). */
+  READY = 'ready',
 }
