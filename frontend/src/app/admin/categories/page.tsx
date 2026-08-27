@@ -4,15 +4,17 @@ import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { isAbortError, isApiError, menuApi } from "@/lib/api";
-import { useAuth } from "@/providers/AuthProvider";
 import type { Category } from "@/types";
 import AddCategoryModal from "@/components/admin/Category/AddCategoryModal";
 import EditCategoryModal from "@/components/admin/Category/EditCategoryModal";
 import DeleteCategoryModal from "@/components/admin/Category/DeleteCategoryModal";
 import styles from "./page.module.scss";
 
+/**
+ * Mounted only behind AdminShell's RouteGuard. Nest still enforces admin on
+ * category mutations — this page must not re-implement a second auth gate.
+ */
 export default function AdminCategoriesPage() {
-  const { user, status } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,14 +22,7 @@ export default function AdminCategoriesPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
-
-  const isAdmin = user?.role?.toUpperCase() === "ADMIN";
-  const authBlocked =
-    status !== "loading" && (status !== "authenticated" || !isAdmin);
-  const authBlockedMessage = authBlocked
-    ? "You need to log in with an Admin account"
-    : null;
+  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
 
   const loadCategories = async (signal?: AbortSignal) => {
     setIsLoading(true);
@@ -44,8 +39,6 @@ const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
   };
 
   useEffect(() => {
-    if (status === "loading" || authBlocked) return;
-
     const controller = new AbortController();
 
     async function load() {
@@ -65,21 +58,18 @@ const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
     void load();
 
     return () => controller.abort();
-  }, [status, isAdmin, authBlocked]);
-
-  const showLoading = status === "loading" || isLoading;
-  const displayError = authBlockedMessage ?? error;
+  }, []);
 
   const handleCategoryAdded = () => {
-    loadCategories();
+    void loadCategories();
   };
 
   const handleCategoryUpdated = () => {
-    loadCategories();
+    void loadCategories();
   };
 
   const handleCategoryDeleted = () => {
-    loadCategories();
+    void loadCategories();
   };
 
   return (
@@ -99,12 +89,12 @@ const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
         </button>
       </div>
 
-      {showLoading && <p className={styles.stateText}>Loading…</p>}
-      {displayError && (
-        <p className={cn(styles.stateText, styles.stateError)}>{displayError}</p>
+      {isLoading && <p className={styles.stateText}>Loading…</p>}
+      {error && (
+        <p className={cn(styles.stateText, styles.stateError)}>{error}</p>
       )}
 
-      {!showLoading && !displayError && (
+      {!isLoading && !error && (
         <table className={styles.table}>
           <thead>
             <tr>

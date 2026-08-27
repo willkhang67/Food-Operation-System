@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { adminApi, isAbortError, isApiError, menuApi } from "@/lib/api";
-import { useAuth } from "@/providers/AuthProvider";
 import type { Food } from "@/types";
 
 import StatusSwitch from "@/components/admin/StatusSwitch";
@@ -27,8 +26,11 @@ const FILTERS: { mode: FilterMode; label: string }[] = [
   { mode: "all", label: "All items" },
 ];
 
+/**
+ * Mounted only behind AdminShell's RouteGuard. Nest still enforces admin on
+ * mutating food APIs — this page must not re-implement a second auth gate.
+ */
 export default function AdminFoodPage() {
-  const { user, status } = useAuth();
   const [foods, setFoods] = useState<Food[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,16 +45,7 @@ export default function AdminFoodPage() {
   const [isDeleteFoodModalOpen, setIsDeleteFoodModalOpen] = useState(false);
   const [deletingFood, setDeletingFood] = useState<Food | null>(null);
 
-  const isAdmin = user?.role?.toUpperCase() === "ADMIN";
-  const authBlocked =
-    status !== "loading" && (status !== "authenticated" || !isAdmin);
-  const authBlockedMessage = authBlocked
-    ? "You need to log in with an Admin account"
-    : null;
-
   useEffect(() => {
-    if (status === "loading" || authBlocked) return;
-
     const controller = new AbortController();
 
     async function load() {
@@ -83,10 +76,7 @@ export default function AdminFoodPage() {
     void load();
 
     return () => controller.abort();
-  }, [status, isAdmin, authBlocked]);
-
-  const showLoading = status === "loading" || isLoading;
-  const displayError = authBlockedMessage ?? error;
+  }, []);
 
   const visibleFoods = useMemo(() => {
     if (filter === "available") {
@@ -216,24 +206,24 @@ export default function AdminFoodPage() {
         ))}
       </div>
 
-      {showLoading && (
+      {isLoading && (
         <p className={styles.stateText}>
           Loading…
         </p>
       )}
 
-      {displayError && (
+      {error && (
         <p
           className={cn(
             styles.stateText,
             styles.stateError,
           )}
         >
-          {displayError}
+          {error}
         </p>
       )}
 
-      {!showLoading && !displayError && (
+      {!isLoading && !error && (
         <table className={styles.table}>
           <thead>
             <tr>
