@@ -23,7 +23,8 @@ const DEFAULT_PREP_MINUTES = 15;
 @Injectable()
 export class OrderService {
   private readonly logger = new Logger(OrderService.name);
-  private readonly prepMinutes: number;
+  /** Used only when an order has no usable cook_time snapshot (legacy). */
+  private readonly fallbackPrepMinutes: number;
 
   constructor(
     @InjectRepository(Order)
@@ -36,7 +37,7 @@ export class OrderService {
   ) {
     const raw = config.get<string>('KITCHEN_DEFAULT_PREP_MINUTES');
     const parsed = raw !== undefined ? Number(raw) : DEFAULT_PREP_MINUTES;
-    this.prepMinutes =
+    this.fallbackPrepMinutes =
       Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : DEFAULT_PREP_MINUTES;
   }
 
@@ -46,6 +47,7 @@ export class OrderService {
       id: item.id,
       foodId: item.foodId,
       foodName: item.foodName,
+      cookTime: item.cookTime,
       unitPrice: Number(item.unitPrice),
       quantity: item.quantity,
       lineTotal: Number(item.lineTotal),
@@ -68,8 +70,46 @@ export class OrderService {
     };
   }
 
-  private computeEstimatedReadyAt(from: Date = new Date()): Date {
-    return new Date(from.getTime() + this.prepMinutes * 60_000);
+  /**
+   * Per-order prep minutes = Σ (quantity × cookTime) from the line snapshot.
+   * Orders are independent: two tickets paid at the same time share the same
+   * clock origin (paidAt), not a kitchen queue offset.
+   * Falls back to config only when the sum is empty/zero (legacy rows).
+   */
+  private prepMinutesForOrder(order: Order): number {
+    const fromItems = (order.items ?? []).reduce((sum, item) => {
+      const cookTime = Number.isFinite(item.cookTime)
+        ? Math.max(0, Math.floor(item.cookTime))
+        : 0;
+      const quantity = Number.isFinite(item.quantity)
+        ? Math.max(0, Math.floor(item.quantity))
+        : 0;
+      return sum + cookTime * quantity;
+    }, 0);
+
+    if (fromItems > 0) {
+      return fromItems;
+    }
+
+    this.logger.warn(
+      `Order prep minutes fell back to default orderId=${order.id} fallbackMinutes=${this.fallbackPrepMinutes}`,
+    );
+    return this.fallbackPrepMinutes;
+  }
+
+  private computeEstimatedReadyAt(order: Order, from: Date = new Date()): Date {
+    return new Date(from.getTime() + this.prepMinutesForOrder(order) * 60_000);
+  }
+
+  /** Snap menu cook_time onto the line; refuse inventing a value for bad menu data. */
+  private snapCookTime(food: Food): number {
+    const raw = Number(food.cookTime);
+    if (!Number.isFinite(raw) || raw < 1) {
+      throw new BadRequestException(
+        `Food "${food.name}" has invalid cook time; fix the menu before ordering`,
+      );
+    }
+    return Math.floor(raw);
   }
 
   //find order with at least 1 food item
@@ -118,10 +158,12 @@ export class OrderService {
       const food = foodMap.get(line.foodId)!;
       const unitPrice = Number(food.price);
       const lineTotal = unitPrice * line.quantity;
+      const cookTime = this.snapCookTime(food);
 
       return this.orderItemRepo.create({
         foodId: food.id,
         foodName: food.name,
+        cookTime,
         unitPrice,
         quantity: line.quantity,
         lineTotal,
@@ -245,7 +287,7 @@ export class OrderService {
       // Legacy paid rows (or a race) may lack an ETA — backfill once so kitchen clocks work.
       let dirty = false;
       if (!order.estimatedReadyAt) {
-        order.estimatedReadyAt = this.computeEstimatedReadyAt();
+        order.estimatedReadyAt = this.computeEstimatedReadyAt(order);
         dirty = true;
       }
       if (!order.paidAt) {
@@ -255,7 +297,7 @@ export class OrderService {
       if (dirty) {
         const patched = await this.orderRepo.save(order);
         this.logger.log(
-          `Order paid fields backfilled orderId=${orderId} estimatedReadyAt=${patched.estimatedReadyAt?.toISOString()}`,
+          `Order paid fields backfilled orderId=${orderId} prepMinutes=${this.prepMinutesForOrder(order)} estimatedReadyAt=${patched.estimatedReadyAt?.toISOString()}`,
         );
         return this.toResponseDto(patched);
       }
@@ -271,12 +313,13 @@ export class OrderService {
       );
     }
     const paidAt = new Date();
+    const prepMinutes = this.prepMinutesForOrder(order);
     order.status = OrderStatus.PAID;
     order.paidAt = paidAt;
-    order.estimatedReadyAt = this.computeEstimatedReadyAt(paidAt);
+    order.estimatedReadyAt = this.computeEstimatedReadyAt(order, paidAt);
     const updated = await this.orderRepo.save(order);
     this.logger.log(
-      `Order marked paid orderId=${orderId} estimatedReadyAt=${updated.estimatedReadyAt?.toISOString()}`,
+      `Order marked paid orderId=${orderId} prepMinutes=${prepMinutes} estimatedReadyAt=${updated.estimatedReadyAt?.toISOString()}`,
     );
     return this.toResponseDto(updated);
   }
