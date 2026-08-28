@@ -16,6 +16,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ProxyAwareThrottlerGuard } from './common/guards/proxy-aware-throttler.guard';
 import { createPinoHttpOptions } from './common/logging/pino-http.config';
+import { buildNestTypeOrmOptions } from './database/typeorm-options';
 
 @Module({
   imports: [
@@ -28,16 +29,7 @@ import { createPinoHttpOptions } from './common/logging/pino-http.config';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get<string>('DB_HOST'),
-        port: parseInt(config.get<string>('DB_PORT', '5432'), 10),
-        username: config.get<string>('DB_USERNAME'),
-        password: config.get<string>('DB_PASSWORD'),
-        database: config.get<string>('DB_NAME'),
-        autoLoadEntities: true,
-        synchronize: true,
-      }),
+      useFactory: (config: ConfigService) => buildNestTypeOrmOptions(config),
     }),
     UserModule,
     AuthModule,

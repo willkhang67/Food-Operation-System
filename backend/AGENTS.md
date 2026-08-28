@@ -23,7 +23,12 @@ Every domain is a self-contained feature module under `src/<domain>/`:
 dto/  entities/  enums/  guards/  <file>.spec.ts (colocated)
 ```
 
-Register entities with `TypeOrmModule.forFeature([...])` in the owning module. `synchronize: true` is on for dev — before deploying to Supabase, switch to migrations.
+Register entities with `TypeOrmModule.forFeature([...])` in the owning module. **Production uses migrations only** (`synchronize` is off). Local dev may set `TYPEORM_SYNCHRONIZE=true` for a fresh docker DB; see `docs/database.md`.
+
+```bash
+npm run migration:run    # apply pending migrations (builds first)
+npm run migration:show   # list migration status
+```
 
 ## Controllers
 
