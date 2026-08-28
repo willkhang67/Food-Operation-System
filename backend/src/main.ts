@@ -1,5 +1,6 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 
@@ -12,6 +13,14 @@ async function bootstrap() {
   });
 
   app.useLogger(app.get(Logger));
+
+  // Hardening for direct API access (Stripe webhook, health, misconfigured clients).
+  // CSP is off: this host serves JSON, not HTML documents.
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+    }),
+  );
 
   app.enableCors({
     origin: process.env.FRONTEND_URL ?? 'http://localhost:3000',

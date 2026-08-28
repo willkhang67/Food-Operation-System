@@ -71,6 +71,7 @@ Nest is a **token issuer only**. It never sets cookies — the Vercel BFF owns `
 - PII (email/name/phone) is AES-256-GCM encrypted at rest; email lookups go through the HMAC blind index, never a plaintext column.
 - Never log tokens, hashes, or decrypted PII.
 - Never store card data. Stripe amounts are derived from server-side order totals, webhook signatures are verified against the raw body (`NestFactory.create(AppModule, { rawBody: true })`), and handlers are idempotent.
+- `helmet` is enabled in `main.ts` with CSP disabled (JSON API). Do not remove without replacing equivalent headers.
 - Add every new env var to `.env.example` with a placeholder. Never commit real secrets.
 
 ## Data conventions

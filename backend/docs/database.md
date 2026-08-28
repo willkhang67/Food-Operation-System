@@ -25,19 +25,34 @@ Only **Nest** should read/write app tables (`foods`, `orders`, `users`, …). Th
 
 ### Render deploy (recommended)
 
+**Root directory:** `backend` (if the repo is the monorepo root).
+
+**Build command** — must install devDependencies (`typescript`, etc.). If `NODE_ENV=production` is set in Render env, plain `npm ci` skips them and the build fails with `nest: not found` or `tsc: not found`:
+
+```bash
+npm ci --include=dev && npm run build
+```
+
 **Start command:**
 
 ```bash
-npm run build && npm run migration:run && npm run start:prod
+npm run start:prod
 ```
+
+With `TYPEORM_MIGRATIONS_RUN=true`, migrations run on boot (no separate `migration:run` needed in start).
 
 **Environment:**
 
 ```env
 NODE_ENV=production
 TYPEORM_SYNCHRONIZE=false
-# Optional: instead of migration:run in start command:
-# TYPEORM_MIGRATIONS_RUN=true
+TYPEORM_MIGRATIONS_RUN=true
+```
+
+Optional: after build, prune dev deps to shrink the slug (start command stays the same):
+
+```bash
+npm ci --include=dev && npm run build && npm prune --omit=dev
 ```
 
 ### Local fresh database (docker)
